@@ -16,27 +16,33 @@ Browser-based floor plan editor for creating, editing and visualizing architectu
 
 ## Preview
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <strong>2D Editor</strong><br><br>
-      <img src="assets/screenshots/2d-editor.png" alt="VisualMaker 2D Editor">
-    </td>
-    <td align="center" width="50%">
-      <strong>Blueprint Mode</strong><br><br>
-      <img src="assets/screenshots/2d-blueprint.png" alt="VisualMaker Blueprint Mode">
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <strong>3D Visualization</strong><br><br>
-      <img src="assets/screenshots/3d-view.png" alt="VisualMaker 3D Visualization">
-    </td>
-    <td align="center" width="50%">
-      <strong>3D Editing</strong><br><br>
-      <img src="assets/screenshots/3d-editor.png" alt="VisualMaker 3D Editing">
-    </td>
-  </tr>
+<p align="center">
+  <a href="https://ink-creator.github.io/VisualMaker/" target="_blank">
+    <strong>Open Live Demo</strong>
+  </a>
+</p>
+
+<table> 
+  <tr> 
+    <td align="center" width="50%"> 
+      <strong>2D Editor</strong><br><br> 
+      <img src="assets/screenshots/2d-editor.png" alt="VisualMaker 2D Editor"> 
+    </td> 
+    <td align="center" width="50%"> 
+      <strong>Blueprint Mode</strong><br><br> 
+      <img src="assets/screenshots/2d-blueprint.png" alt="VisualMaker Blueprint Mode"> 
+    </td> 
+  </tr> 
+  <tr> 
+    <td align="center" width="50%"> 
+      <strong>3D Visualization</strong><br><br> 
+      <img src="assets/screenshots/3d-view.png" alt="VisualMaker 3D Visualization"> 
+    </td> 
+    <td align="center" width="50%"> 
+      <strong>3D Editing</strong><br><br> 
+      <img src="assets/screenshots/3d-editor.png" alt="VisualMaker 3D Editing"> 
+    </td> 
+  </tr> 
 </table>
 
 ---
