@@ -2,13 +2,17 @@
 
 Browser-based floor plan editor for creating, editing and visualizing architectural layouts in **2D and 3D**.
 
-No installation, backend or external 3D software required.
-
 [English](#english) · [Português](#português)
 
 <p align="center">
-  <img src="assets/screenshots/3d-view.png" alt="VisualMaker 3D Visualization" width="900">
+  <img src="assets/screenshots/2d-3d.gif" alt="VisualMaker 2D to 3D demonstration" width="900">
 </p>
+
+<p align="center">
+  <strong>Create in 2D. Visualize and edit in 3D.</strong>
+</p>
+
+---
 
 ## Preview
 
@@ -43,15 +47,17 @@ No installation, backend or external 3D software required.
 
 **VisualMaker** is a browser-based floor plan editor designed to make the creation and visualization of architectural layouts simple and interactive.
 
-A project can be created in the 2D editor and immediately visualized as a navigable 3D environment.
+Projects are created in a 2D editor and can be instantly transformed into a navigable 3D environment.
 
-The application runs directly in the browser and does not require a backend, installation or external 3D software.
+The application runs directly in the browser and does not require a backend or external 3D software.
+
+---
 
 ## Features
 
-### 2D floor plan editor
+### 2D Floor Plan Editor
 
-Create and edit floor plans using:
+Create and edit layouts using:
 
 - Walls
 - Doors
@@ -64,11 +70,11 @@ Create and edit floor plans using:
 - Gates
 - Structural elements
 
-Elements can be positioned and resized using exact measurements.
+Elements can be positioned and resized using precise measurements.
 
-### Furniture and object library
+### Furniture and Object Library
 
-VisualMaker includes objects for different areas of a project, including:
+VisualMaker includes objects for different areas of a project, such as:
 
 - Sofa
 - Bed
@@ -91,11 +97,11 @@ VisualMaker includes objects for different areas of a project, including:
 
 Objects are represented in both the 2D editor and the 3D environment.
 
-### Colors and materials
+### Colors and Materials
 
 Rooms and objects support different colors and materials.
 
-Floor materials include:
+Available floor styles include:
 
 - Solid colors
 - Wood
@@ -103,20 +109,28 @@ Floor materials include:
 - Concrete
 - Grass
 
-Color presets are available for both light and dark themes.
+Color presets are also compatible with light and dark themes.
 
-### Blueprint mode
+---
 
-The floor plan can be displayed using a technical blueprint-style visualization with:
+## Blueprint Mode
+
+The floor plan can be displayed using a technical blueprint-style visualization.
+
+It includes:
 
 - Blue background
 - Architectural grid
 - Measurements
 - High-contrast lines
 
-## 3D visualization
+This mode can also be exported as an image.
 
-The 2D floor plan can be converted directly into an interactive 3D environment.
+---
+
+## 3D Visualization
+
+The floor plan created in the 2D editor can be transformed directly into an interactive 3D environment.
 
 The 3D representation includes:
 
@@ -132,7 +146,7 @@ The 3D representation includes:
 - Lighting
 - Perspective camera
 
-### Camera controls
+### Camera Controls
 
 | Control | Action |
 | --- | --- |
@@ -146,9 +160,11 @@ The 3D representation includes:
 
 Front walls can also be temporarily hidden to make interior spaces easier to inspect.
 
-## 3D editing
+---
 
-Furniture and objects can be adjusted directly from the 3D view.
+## 3D Editing
+
+Furniture and other objects can be adjusted directly from the 3D environment.
 
 You can:
 
@@ -167,9 +183,11 @@ You can:
 
 Holding `Alt` while moving an object temporarily disables automatic snapping.
 
-Structural changes such as creating or modifying walls remain in the 2D editor to keep the floor plan geometry consistent.
+Structural changes such as creating or modifying walls remain in the 2D editor to keep the project geometry consistent.
 
-## Saving projects
+---
+
+## Saving Projects
 
 Projects can be saved directly in the browser.
 
@@ -187,11 +205,15 @@ Saved data includes:
 - Current 2D or 3D view
 - Front-wall visibility
 
-When a project is opened again, its 3D environment is automatically reconstructed from the saved floor plan.
+When a project is opened again, its 3D environment is reconstructed automatically from the saved floor plan.
+
+---
 
 ## Export
 
-### 2D export
+VisualMaker supports multiple export formats for both 2D and 3D projects.
+
+### 2D Export
 
 Floor plans can be exported as:
 
@@ -203,11 +225,11 @@ Floor plans can be exported as:
 
 ### Interactive 3D HTML
 
-The complete 3D project can also be exported as a standalone `.html` file.
+The complete 3D environment can be exported as a standalone `.html` file.
 
 The exported viewer:
 
-- Contains the complete 3D environment
+- Contains the complete 3D scene
 - Opens directly in a modern browser
 - Works offline
 - Requires no installation
@@ -218,70 +240,102 @@ The exported viewer:
 
 This makes it possible to share an interactive 3D project using only a single HTML file.
 
-## How to run
+### OBJ + MTL Export
+
+The 3D model can also be exported using:
+
+- `.obj` — model geometry
+- `.mtl` — material information
+
+These files can be imported into compatible 3D software for further visualization, editing or integration into other workflows.
+
+---
+
+## How to Run
 
 No installation is required.
 
-Download or clone the repository:
+Clone the repository:
 
-    git clone https://github.com/ink-creator/VisualMaker.git
+```bash
+git clone https://github.com/ink-creator/VisualMaker.git
+```
 
-Keep the project files together and open:
+Or download the repository as a ZIP.
 
-    index.html
+Then open:
 
-A modern browser with WebGL support is recommended, such as Chrome, Edge or Firefox.
+```text
+index.html
+```
+
+A modern browser is recommended, such as:
+
+- Google Chrome
+- Microsoft Edge
+- Mozilla Firefox
+
+---
 
 ## Technologies
 
-VisualMaker was built with:
+VisualMaker was built using:
 
 - HTML
 - CSS
 - JavaScript
-- SVG for the 2D editor
-- Canvas / WebGL for 3D visualization
-- Browser storage for project persistence
+- SVG
+- WebGL
+- Browser storage
 
 No backend is required.
 
-## Project structure
+---
 
-    VisualMaker/
-    ├── assets/
-    │   └── screenshots/
-    │       ├── 2d-editor.png
-    │       ├── 2d-blueprint.png
-    │       ├── 3d-view.png
-    │       └── 3d-editor.png
-    ├── app.js
-    ├── elements.js
-    ├── geometry.js
-    ├── index.html
-    ├── render.js
-    ├── storage.js
-    ├── styles.css
-    ├── view3d.js
-    ├── LICENSE
-    └── README.md
+## Project Structure
 
-## Current status
+```text
+VisualMaker/
+├── assets/
+│   └── screenshots/
+│       ├── 2d-3d.gif
+│       ├── 2d-editor.png
+│       ├── 2d-blueprint.png
+│       ├── 3d-view.png
+│       └── 3d-editor.png
+├── app.js
+├── elements.js
+├── geometry.js
+├── index.html
+├── render.js
+├── storage.js
+├── styles.css
+├── view3d.js
+├── LICENSE
+└── README.md
+```
+
+---
+
+## Current Status
 
 The first functional version already supports the complete workflow:
 
-    Create floor plan
-           ↓
-      Edit in 2D
-           ↓
-     View in 3D
-           ↓
-     Edit objects
-           ↓
-      Save project
-           ↓
-    Export 2D / 3D
+```text
+Create floor plan
+       ↓
+Edit in 2D
+       ↓
+Visualize in 3D
+       ↓
+Edit objects in 3D
+       ↓
+Save project
+       ↓
+Export 2D / 3D
+```
 
-Future improvements can be introduced gradually in new versions.
+Future features and improvements can be introduced gradually in new versions.
 
 ---
 
@@ -289,15 +343,17 @@ Future improvements can be introduced gradually in new versions.
 
 ## Sobre
 
-O **VisualMaker** é um editor de plantas baixas executado diretamente no navegador, criado para facilitar a montagem e visualização de projetos arquitetônicos em **2D e 3D**.
+O **VisualMaker** é um editor de plantas baixas executado diretamente no navegador, criado para facilitar a criação e visualização de projetos arquitetônicos em **2D e 3D**.
 
-Uma planta pode ser criada no editor 2D e visualizada imediatamente como um ambiente 3D navegável.
+Os projetos são criados no editor 2D e podem ser transformados imediatamente em um ambiente 3D navegável.
 
-A aplicação funciona diretamente no navegador e não precisa de backend, instalação ou programa 3D externo.
+A aplicação funciona diretamente no navegador e não precisa de backend ou programa 3D externo.
+
+---
 
 ## Funcionalidades
 
-### Editor de planta baixa 2D
+### Editor de Planta Baixa 2D
 
 Crie e edite plantas utilizando:
 
@@ -312,9 +368,9 @@ Crie e edite plantas utilizando:
 - Portões
 - Elementos estruturais
 
-Os elementos podem ser posicionados e redimensionados utilizando medidas exatas.
+Os elementos podem ser posicionados e redimensionados utilizando medidas precisas.
 
-### Biblioteca de móveis e objetos
+### Biblioteca de Móveis e Objetos
 
 O VisualMaker possui objetos para diferentes áreas do projeto, incluindo:
 
@@ -339,11 +395,11 @@ O VisualMaker possui objetos para diferentes áreas do projeto, incluindo:
 
 Os objetos possuem representação tanto no editor 2D quanto no ambiente 3D.
 
-### Cores e materiais
+### Cores e Materiais
 
 Cômodos e objetos podem utilizar diferentes cores e materiais.
 
-Entre os materiais de piso disponíveis estão:
+Entre os estilos de piso disponíveis estão:
 
 - Cores sólidas
 - Madeira
@@ -351,20 +407,28 @@ Entre os materiais de piso disponíveis estão:
 - Concreto
 - Grama
 
-Também existem paletas prontas compatíveis com os temas claro e escuro.
+As paletas também possuem suporte aos temas claro e escuro.
 
-### Modo Blueprint
+---
 
-A planta pode ser exibida em uma visualização técnica no estilo blueprint, utilizando:
+## Modo Blueprint
+
+A planta pode ser exibida utilizando uma visualização técnica no estilo blueprint.
+
+Ela inclui:
 
 - Fundo azul
 - Grade arquitetônica
 - Medidas
 - Linhas de alto contraste
 
+O modo Blueprint também pode ser exportado como imagem.
+
+---
+
 ## Visualização 3D
 
-A planta criada no editor 2D pode ser convertida diretamente para um ambiente 3D interativo.
+A planta criada no editor 2D pode ser transformada diretamente em um ambiente 3D interativo.
 
 A representação 3D inclui:
 
@@ -380,7 +444,7 @@ A representação 3D inclui:
 - Iluminação
 - Câmera em perspectiva
 
-### Controles da câmera
+### Controles da Câmera
 
 | Controle | Ação |
 | --- | --- |
@@ -394,9 +458,11 @@ A representação 3D inclui:
 
 As paredes frontais também podem ser ocultadas temporariamente para facilitar a visualização dos ambientes internos.
 
+---
+
 ## Edição em 3D
 
-Móveis e objetos podem ser ajustados diretamente pela visualização 3D.
+Móveis e outros objetos podem ser ajustados diretamente pelo ambiente 3D.
 
 É possível:
 
@@ -415,9 +481,11 @@ Móveis e objetos podem ser ajustados diretamente pela visualização 3D.
 
 Ao segurar `Alt` durante a movimentação, os encaixes automáticos são temporariamente desativados.
 
-Alterações estruturais, como criação e modificação de paredes, continuam sendo realizadas no editor 2D para manter a geometria da planta consistente.
+Alterações estruturais, como criação ou modificação de paredes, continuam sendo realizadas no editor 2D para manter a geometria do projeto consistente.
 
-## Salvamento de projetos
+---
+
+## Salvamento de Projetos
 
 Os projetos podem ser salvos diretamente no navegador.
 
@@ -437,7 +505,11 @@ O projeto salvo inclui:
 
 Ao abrir o projeto novamente, o ambiente 3D é reconstruído automaticamente a partir da planta salva.
 
+---
+
 ## Exportação
+
+O VisualMaker possui diferentes opções de exportação para projetos 2D e 3D.
 
 ### Exportação 2D
 
@@ -449,13 +521,13 @@ A planta pode ser exportada em:
 - Tema escuro
 - Blueprint
 
-### HTML 3D interativo
+### HTML 3D Interativo
 
-O projeto completo também pode ser exportado como um único arquivo `.html`.
+O ambiente 3D completo pode ser exportado como um único arquivo `.html`.
 
-O arquivo exportado:
+O visualizador exportado:
 
-- Contém o ambiente 3D
+- Contém toda a cena 3D
 - Abre diretamente em navegadores modernos
 - Funciona offline
 - Não precisa de instalação
@@ -464,21 +536,44 @@ O arquivo exportado:
 - Permite movimentar a câmera
 - Permite utilizar zoom
 
-Isso permite compartilhar uma planta 3D interativa utilizando apenas um arquivo HTML.
+Isso permite compartilhar um projeto 3D interativo utilizando apenas um arquivo HTML.
 
-## Como executar
+### Exportação OBJ + MTL
+
+O modelo 3D também pode ser exportado utilizando:
+
+- `.obj` — geometria do modelo
+- `.mtl` — informações dos materiais
+
+Esses arquivos podem ser utilizados em softwares 3D compatíveis para visualização, edição ou integração com outros projetos.
+
+---
+
+## Como Executar
 
 Nenhuma instalação é necessária.
 
-Baixe o projeto ou clone o repositório:
+Clone o repositório:
 
-    git clone https://github.com/ink-creator/VisualMaker.git
+```bash
+git clone https://github.com/ink-creator/VisualMaker.git
+```
 
-Mantenha os arquivos do projeto juntos e abra:
+Ou baixe o repositório como ZIP.
 
-    index.html
+Depois abra:
 
-É recomendado utilizar um navegador moderno com suporte a WebGL, como Chrome, Edge ou Firefox.
+```text
+index.html
+```
+
+É recomendado utilizar um navegador moderno, como:
+
+- Google Chrome
+- Microsoft Edge
+- Mozilla Firefox
+
+---
 
 ## Tecnologias
 
@@ -487,47 +582,56 @@ O VisualMaker foi desenvolvido utilizando:
 - HTML
 - CSS
 - JavaScript
-- SVG para o editor 2D
-- Canvas / WebGL para a visualização 3D
-- Armazenamento do navegador para salvar os projetos
+- SVG
+- WebGL
+- Armazenamento do navegador
 
 O projeto não depende de backend.
 
-## Estrutura do projeto
+---
 
-    VisualMaker/
-    ├── assets/
-    │   └── screenshots/
-    │       ├── 2d-editor.png
-    │       ├── 2d-blueprint.png
-    │       ├── 3d-view.png
-    │       └── 3d-editor.png
-    ├── app.js
-    ├── elements.js
-    ├── geometry.js
-    ├── index.html
-    ├── render.js
-    ├── storage.js
-    ├── styles.css
-    ├── view3d.js
-    ├── LICENSE
-    └── README.md
+## Estrutura do Projeto
 
-## Estado atual
+```text
+VisualMaker/
+├── assets/
+│   └── screenshots/
+│       ├── 2d-3d.gif
+│       ├── 2d-editor.png
+│       ├── 2d-blueprint.png
+│       ├── 3d-view.png
+│       └── 3d-editor.png
+├── app.js
+├── elements.js
+├── geometry.js
+├── index.html
+├── render.js
+├── storage.js
+├── styles.css
+├── view3d.js
+├── LICENSE
+└── README.md
+```
+
+---
+
+## Estado Atual
 
 A primeira versão funcional já permite realizar o fluxo completo:
 
-    Criar planta
-         ↓
-    Editar em 2D
-         ↓
-    Visualizar em 3D
-         ↓
-    Editar objetos
-         ↓
-    Salvar projeto
-         ↓
-    Exportar em 2D / 3D
+```text
+Criar planta
+      ↓
+Editar em 2D
+      ↓
+Visualizar em 3D
+      ↓
+Editar objetos em 3D
+      ↓
+Salvar projeto
+      ↓
+Exportar em 2D / 3D
+```
 
 Novas funcionalidades e melhorias podem ser adicionadas gradualmente em versões futuras.
 
