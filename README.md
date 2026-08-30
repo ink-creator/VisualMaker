@@ -16,21 +16,21 @@ No installation, backend or external 3D software required.
   <tr>
     <td align="center" width="50%">
       <strong>2D Editor</strong><br><br>
-      <img src="assets/screenshots/2d-editor.png" alt="VisualMaker 2D Editor">
+      <img src="![alt text](assets/screeshots/2d-editor.png)" alt="VisualMaker 2D Editor">
     </td>
     <td align="center" width="50%">
       <strong>Blueprint Mode</strong><br><br>
-      <img src="assets/screenshots/2d-blueprint.png" alt="VisualMaker Blueprint Mode">
+      <img src="![alt text](assets/screenshots/2d-blueprint.png)" alt="VisualMaker Blueprint Mode">
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <strong>3D Visualization</strong><br><br>
-      <img src="assets/screenshots/3d-view.png" alt="VisualMaker 3D Visualization">
+      <img src="![alt text](assets/screeshots/3d-view.png)" alt="VisualMaker 3D Visualization">
     </td>
     <td align="center" width="50%">
       <strong>3D Editing</strong><br><br>
-      <img src="assets/screenshots/3d-editor.png" alt="VisualMaker 3D Editing">
+      <img src="![alt text](assets/screenshots/3d-editor.png)" alt="VisualMaker 3D Editing">
     </td>
   </tr>
 </table>
