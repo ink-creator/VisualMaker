@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visual Maker — Planta Baixa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div class="screen active" id="screen-home">
+    <div class="home-header">
+      <div class="home-header-inner">
+        <button id="home-theme-toggle" class="theme-toggle home-theme-toggle" title="Ativar modo escuro" aria-label="Ativar modo escuro" aria-pressed="false">
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z"/></svg>
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <p class="home-eyebrow">Ferramenta de planta baixa</p>
+        <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><h1 class="home-title">Visual Maker</h1></div>
+        <p class="home-sub">Plantas baixas claras, precisas e prontas para apresentar — sem a complexidade de um software CAD.</p>
+      </div>
+    </div>
+    <div class="home-content">
+      <div class="new-project-card">
+        <h2>Nova planta</h2>
+        <div class="dims-row">
+          <label>Largura
+            <input type="text" id="new-width" value="8" inputmode="decimal">
+          </label>
+          <span class="dims-x">×</span>
+          <label>Comprimento
+            <input type="text" id="new-height" value="10" inputmode="decimal">
+          </label>
+          <span class="dims-x" style="padding-bottom:9px;">m</span>
+          <div class="dims-actions">
+            <button class="btn-primary" id="btn-create-dims">Criar planta</button>
+          </div>
+        </div>
+        <div class="preset-chips">
+          <button class="chip" data-w="3" data-h="4">3×4</button>
+          <button class="chip" data-w="5" data-h="6">5×6</button>
+          <button class="chip" data-w="8" data-h="10">8×10</button>
+          <button class="chip" data-w="10" data-h="12">10×12</button>
+        </div>
+        <div class="divider-or">ou</div>
+        <button class="btn-secondary" id="btn-create-manual">Construir manualmente</button>
+      </div>
+
+      <p class="projects-section-title">Meus projetos</p>
+      <div class="projects-list" id="projects-list">
+        <p class="loading-text">Carregando…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EDITOR SCREEN ===== -->
+  <div class="screen" id="screen-editor">
+    <header class="toolbar">
+      <div class="toolbar-left">
+        <button class="btn-icon" id="btn-home" title="Voltar aos projetos">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+        </button>
+        <input type="text" id="project-name-input" class="project-name-input" value="Novo projeto">
+      </div>
+      <div class="toolbar-actions">
+        <button id="btn-undo" title="Ctrl+Z"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7H5v-4M5 7c2-3 5-4 8-3 4 1 7 4 7 8s-3 8-8 8c-3 0-6-2-7-5"/></svg><span>Desfazer</span></button>
+        <button id="btn-redo" title="Ctrl+Y"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7h4v-4m0 4c-2-3-5-4-8-3-4 1-7 4-7 8s3 8 8 8c3 0 6-2 7-5"/></svg><span>Refazer</span></button>
+        <div class="toolbar-divider"></div>
+        <div class="view-mode-switch" role="group" aria-label="Modo de visualização">
+          <button id="btn-view-2d" class="active" type="button" aria-pressed="true">2D</button>
+          <button id="btn-view-3d" type="button" aria-pressed="false">3D</button>
+        </div>
+        <button id="theme-toggle" class="theme-toggle" title="Ativar modo escuro" aria-label="Ativar modo escuro" aria-pressed="false">
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z"/></svg>
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <label class="blueprint-switch" title="Exibir todas as medidas das paredes">
+          <input type="checkbox" id="blueprint-toggle">
+          <span class="switch-track"><span></span></span>
+          <span>Modo Blueprint</span>
+        </label>
+        <button id="btn-save" title="Ctrl+S"><span>Salvar</span></button>
+        <button id="btn-export" class="btn-export"><span>Exportar</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></button>
+      </div>
+    </header>
+
+    <div class="editor-body">
+      <aside class="sidebar">
+        <p class="mini-label">Construção</p>
+        <div class="tool-group">
+          <button class="tool-btn active" data-tool="select" title="Selecionar (Q)">
+            <svg viewBox="0 0 24 24"><path d="M4 2 L4 20 L9 15 L13 22 L16 20 L12 13 L18 13 Z" fill="currentColor"/></svg>
+            <span>Selecionar</span><kbd>Q</kbd>
+          </button>
+          <button class="tool-btn" data-tool="wall" title="Parede (W)">
+            <svg viewBox="0 0 24 24"><rect x="2" y="10" width="20" height="4" fill="currentColor"/></svg>
+            <span>Parede</span><kbd>W</kbd>
+          </button>
+          <button class="tool-btn" data-tool="door" title="Porta (E)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V4h3v16h9"/><path d="M8 20A13 13 0 0 0 20 7" stroke-width="1.4" stroke-dasharray="2 2"/></svg>
+            <span>Porta</span><kbd>E</kbd>
+          </button>
+          <button class="tool-btn" data-tool="window" title="Janela (R)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="8"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="1.4"/></svg>
+            <span>Janela</span><kbd>R</kbd>
+          </button>
+          <button class="tool-btn" data-tool="room" title="Cômodo (T)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16"/></svg>
+            <span>Cômodo</span><kbd>T</kbd>
+          </button>
+          <button class="tool-btn" data-tool="cota" title="Cota (Y)">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="8" x2="3" y2="16"/><line x1="21" y1="8" x2="21" y2="16"/></svg>
+            <span>Cota</span><kbd>Y</kbd>
+          </button>
+          <button class="tool-btn" data-tool="text" title="Texto (U)">
+            <svg viewBox="0 0 24 24"><path d="M4 5h16v3.2h-6.3V19h-3.4V8.2H4z" fill="currentColor"/></svg>
+            <span>Texto</span><kbd>U</kbd>
+          </button>
+        </div>
+        <div class="sidebar-divider"></div>
+        <p class="mini-label">Biblioteca</p>
+        <div class="library-tabs" role="tablist" aria-label="Categorias da biblioteca">
+          <button class="library-tab active" data-category="interior">Interior</button>
+          <button class="library-tab" data-category="outdoor">Quintal</button>
+          <button class="library-tab" data-category="structure">Estruturas</button>
+        </div>
+        <div class="asset-grid" id="asset-grid"></div>
+
+        <div class="sidebar-divider"></div>
+        <p class="mini-label">Estilo do projeto</p>
+        <div class="palette-list" id="palette-list" aria-label="Paleta de cores">
+          <button class="palette-option active" data-palette="technical"><span class="palette-swatches"><i></i><i></i><i></i></span><span>Técnico</span></button>
+          <button class="palette-option" data-palette="warm"><span class="palette-swatches"><i></i><i></i><i></i></span><span>Natural</span></button>
+          <button class="palette-option" data-palette="coastal"><span class="palette-swatches"><i></i><i></i><i></i></span><span>Litoral</span></button>
+          <button class="palette-option" data-palette="mono"><span class="palette-swatches"><i></i><i></i><i></i></span><span>Monocromático</span></button>
+        </div>
+
+        <div class="sidebar-divider"></div>
+        <p class="mini-label">Espelhamento</p>
+        <div class="mirror-controls">
+          <label class="check-row"><input type="checkbox" id="mirror-x-toggle"> Eixo X <span class="hint">(esq/dir)</span></label>
+          <label class="check-row"><input type="checkbox" id="mirror-y-toggle"> Eixo Y <span class="hint">(cima/baixo)</span></label>
+        </div>
+
+        <div class="sidebar-divider"></div>
+        <p class="mini-label">Grade</p>
+        <div class="grid-controls">
+          <label class="check-row"><input type="checkbox" id="grid-toggle" checked> Ativa</label>
+          <label class="num-row">Espaçamento
+            <span class="num-row-inline"><input type="number" id="grid-spacing" value="50" min="10" step="10"><span>cm</span></span>
+          </label>
+        </div>
+      </aside>
+
+      <div class="canvas-wrap" id="canvas-wrap">
+        <svg id="svg-canvas"></svg>
+        <canvas id="canvas-3d" class="hidden" aria-label="Visualização 3D da planta"></canvas>
+        <div class="viewer3d-help hidden" id="viewer3d-help">
+          <div>
+            <strong>3D editável</strong>
+            <span>Clique no móvel · arraste para mover · seta vertical muda altura · anel gira · Alt ignora snap</span>
+            <span id="viewer3d-selection" class="viewer3d-selection">Nenhum objeto selecionado</span>
+          </div>
+          <div class="viewer3d-actions">
+            <button id="viewer3d-hide-front" type="button" aria-pressed="false">Ocultar frente</button>
+            <button id="viewer3d-reset" type="button">Recentralizar</button>
+          </div>
+        </div>
+        <div class="empty-hint hidden" id="empty-hint">
+          <div class="empty-hint-icon" aria-hidden="true"><span></span><span></span></div>
+          <p>Escolha a ferramenta <strong>Parede</strong> e clique no canvas para começar a desenhar.</p>
+        </div>
+        <div class="summary-panel hidden" id="summary-panel"></div>
+        <div class="properties-panel hidden" id="properties-panel"></div>
+        <div class="text-editor-overlay hidden" id="text-editor-overlay">
+          <input type="text" id="text-editor-input" placeholder="Digite o texto">
+        </div>
+      </div>
+    </div>
+
+    <footer class="zoom-bar">
+      <div class="status-mode" id="status-mode"><span></span> Edição normal</div>
+      <button id="zoom-out">−</button>
+      <span id="zoom-label">100%</span>
+      <button id="zoom-in">+</button>
+      <button id="zoom-fit" class="zoom-fit-btn">Ajustar</button>
+      <div class="status-help">Shift + R rotaciona · Ctrl + rolagem amplia</div>
+    </footer>
+  </div>
+
+  <div class="modal-backdrop hidden" id="export-modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
+    <div class="export-dialog">
+      <div class="dialog-header"><div><p class="dialog-kicker">Finalizar projeto</p><h2 id="export-title">Exportar planta</h2></div><button class="dialog-close" id="export-close" aria-label="Fechar"><span></span><span></span></button></div>
+      <p class="dialog-copy">Escolha a apresentação. O arquivo será gerado em alta resolução, pronto para compartilhar ou imprimir.</p>
+      <div class="export-modes export-modes-three">
+        <label class="export-mode"><input type="radio" name="export-mode" value="light" checked><span class="export-card"><span class="export-preview light-preview"><i></i><i></i><i></i></span><strong>Modo claro</strong><small>Fundo claro usando a paleta de cores atual.</small></span></label>
+        <label class="export-mode"><input type="radio" name="export-mode" value="dark"><span class="export-card"><span class="export-preview dark-preview"><i></i><i></i><i></i></span><strong>Modo escuro</strong><small>Fundo escuro usando a versão noturna da paleta.</small></span></label>
+        <label class="export-mode"><input type="radio" name="export-mode" value="blueprint"><span class="export-card"><span class="export-preview blueprint-preview"><i></i><i></i><i></i></span><strong>Blueprint</strong><small>Fundo azul e medidas em todas as paredes.</small></span></label>
+      </div>
+      <div class="dialog-actions"><button class="btn-secondary" id="export-svg">Baixar SVG</button><button class="btn-secondary" id="export-3d-html">Visualização 3D (.html)</button><button class="btn-secondary" id="export-3d">Baixar 3D (OBJ + MTL)</button><button class="btn-primary" id="export-png">Baixar PNG</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="unsaved-modal" role="dialog" aria-modal="true" aria-labelledby="unsaved-title" aria-describedby="unsaved-description">
+    <div class="export-dialog unsaved-dialog">
+      <div class="unsaved-symbol" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3 2.8 19h18.4L12 3Z"/><path d="M12 9v4.5M12 17h.01"/></svg>
+      </div>
+      <div class="unsaved-content">
+        <p class="dialog-kicker">Alterações pendentes</p>
+        <h2 id="unsaved-title">Salvar antes de sair?</h2>
+        <p class="dialog-copy" id="unsaved-description">Este projeto possui alterações que ainda não foram salvas. Se você sair agora, elas serão perdidas.</p>
+      </div>
+      <div class="unsaved-summary"><span class="unsaved-status-dot"></span><span>Última edição ainda não salva</span></div>
+      <div class="dialog-actions unsaved-actions">
+        <button class="btn-ghost" id="unsaved-cancel">Continuar editando</button>
+        <button class="btn-danger" id="unsaved-discard">Sair sem salvar</button>
+        <button class="btn-primary" id="unsaved-save">Salvar e sair</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="geometry.js"></script>
+<script src="elements.js"></script>
+<script src="render.js"></script>
+<script src="storage.js"></script>
+<script src="app.js"></script>
+<script src="view3d.js"></script>
+</body>
+</html>
