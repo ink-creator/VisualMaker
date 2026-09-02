@@ -38,7 +38,7 @@ async function saveProject(showFeedback){
     if (showFeedback) flashSaveIndicator(); else updateSaveButton();
   } catch(err){
     console.error('Erro ao salvar projeto', err);
-    if (showFeedback) alert('Não foi possível salvar o projeto agora.');
+    if (showFeedback) alert(t('couldNotSaveProject'));
   }
 }
 async function listProjects(){
@@ -51,7 +51,7 @@ async function listProjects(){
         const r = await projectStorage.get(key);
         if (r && r.value){
           const data = JSON.parse(r.value);
-          out.push({ id:key.slice('project:'.length), name:data.name||'Sem título', updatedAt:data.updatedAt||0 });
+          out.push({ id:key.slice('project:'.length), name:data.name||t('untitled'), updatedAt:data.updatedAt||0 });
         }
       } catch(e){ /* registro corrompido: ignora */ }
     }
@@ -68,7 +68,7 @@ async function loadProjectData(id){
     if (!r || !r.value) return false;
     const data = JSON.parse(r.value);
     state.projectId = id;
-    state.projectName = data.name || 'Sem título';
+    state.projectName = data.name || t('untitled');
     state.elements = data.elements || [];
     state.gridSpacing = data.gridSpacing || 0.5;
     state.gridOn = data.gridOn!==false;
@@ -88,10 +88,10 @@ async function deleteProjectData(id){
 
 async function renderHomeScreen(){
   const listEl = document.getElementById('projects-list');
-  listEl.innerHTML = '<p class="loading-text">Carregando…</p>';
+  listEl.innerHTML = `<p class="loading-text">${t('loading')}</p>`;
   const projects = await listProjects();
   if (projects.length===0){
-    listEl.innerHTML = '<p class="empty-text">Nenhum projeto salvo ainda. Crie o primeiro acima.</p>';
+    listEl.innerHTML = `<p class="empty-text">${t('noSavedProjects')}</p>`;
     return;
   }
   listEl.innerHTML = '';
@@ -104,14 +104,14 @@ async function renderHomeScreen(){
         <div class="project-card-name">${escapeHTML(p.name)}</div>
         <div class="project-card-date">${relativeDate(p.updatedAt)}</div>
       </div>
-      <button class="project-card-delete" title="Excluir" aria-label="Excluir projeto" data-id="${escapeAttr(p.id)}"><span></span><span></span></button>`;
+      <button class="project-card-delete" title="${t('delete')}" aria-label="${t('deleteProject')}" data-id="${escapeAttr(p.id)}"><span></span><span></span></button>`;
     card.addEventListener('click', (e)=>{
       if (e.target.closest('.project-card-delete')) return;
       openProject(p.id);
     });
     card.querySelector('.project-card-delete').addEventListener('click', async (e)=>{
       e.stopPropagation();
-      if (confirm(`Excluir o projeto "${p.name}"?`)){
+      if (confirm(t('deleteProjectConfirm',{name:p.name}))){
         await deleteProjectData(p.id);
         renderHomeScreen();
       }

@@ -18,7 +18,7 @@
   const gl=canvas.getContext('webgl',{antialias:true,alpha:false,premultipliedAlpha:false});
   if(!gl){
     btn3d.disabled=true;
-    btn3d.title='O navegador não oferece suporte a WebGL.';
+    btn3d.title=t('webglUnsupported');
     return;
   }
 
@@ -237,12 +237,12 @@
     if(!selectionInfo)return;
     const el=selectedObject();
     if(!el){
-      selectionInfo.textContent='Nenhum objeto selecionado';
+      selectionInfo.textContent=t('noObjectSelected');
       return;
     }
     const z=objectElevation(el);
     const rot=((el.rotation||0)%360+360)%360;
-    selectionInfo.textContent=`${el.label||'Objeto'} · X ${el.x.toFixed(2)} m · Y ${el.y.toFixed(2)} m · Z ${z.toFixed(2)} m · ${Math.round(rot)}°`;
+    selectionInfo.textContent=`${getAssetLabel(el.kind,el.category,el.label||t('object'))} · X ${el.x.toFixed(2)} m · Y ${el.y.toFixed(2)} m · Z ${z.toFixed(2)} m · ${Math.round(rot)}°`;
   }
 
   function canvasRay(clientX,clientY){
@@ -387,7 +387,7 @@
   }
   function updateHideFrontButton(){
     if(!hideFrontBtn)return;
-    hideFrontBtn.textContent=hideFrontWalls?'Mostrar frente':'Ocultar frente';
+    hideFrontBtn.textContent=hideFrontWalls?t('showFront'):t('hideFront');
     hideFrontBtn.setAttribute('aria-pressed',String(hideFrontWalls));
   }
   function shouldHideFrontWall(wall,eye){
@@ -1028,7 +1028,7 @@
 
   function buildStandalone3DHTML(mesh){
     const camera=standaloneViewerCamera();
-    const projectName=String((state&&state.projectName)||'Visualização 3D');
+    const projectName=String((state&&state.projectName)||t('standalone3D'));
     const dark=document.body.classList.contains('dark-mode');
     const payload={
       name:projectName,
@@ -1039,12 +1039,15 @@
     };
     const dataJSON=JSON.stringify(payload).replace(/<\/script/gi,'<\\/script');
     const title=projectName.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const lang=window.getCurrentLanguage()==='en'?'en':'pt-BR';
+    const lightBgJSON=JSON.stringify(t('lightBackground'));
+    const darkBgJSON=JSON.stringify(t('darkBackground'));
     return `<!doctype html>
-<html lang="pt-BR">
+<html lang="${lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title} — Visualização 3D</title>
+<title>${title} — ${t('standalone3D')}</title>
 <style>
   :root{color-scheme:${dark?'dark':'light'};font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
   *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:${dark?'#1b222a':'#e3ecf2'}}
@@ -1058,13 +1061,13 @@
 </style>
 </head>
 <body>
-<canvas id="viewer" aria-label="Visualização 3D de ${title}"></canvas>
+<canvas id="viewer" aria-label="${t('standalone3D')} — ${title}"></canvas>
 <div class="topbar">
-  <div class="card title"><strong>${title}</strong><small>Visual Maker · visualização 3D offline</small></div>
-  <div class="card actions"><button id="reset" title="Centralizar a planta">Centralizar</button><button id="theme" class="wide" title="Alternar fundo">${dark?'Fundo claro':'Fundo escuro'}</button></div>
+  <div class="card title"><strong>${title}</strong><small>${t('standalone3DOffline')}</small></div>
+  <div class="card actions"><button id="reset" title="${t('centerTitle')}">${t('center')}</button><button id="theme" class="wide" title="${t('toggleBackground')}">${dark?t('lightBackground'):t('darkBackground')}</button></div>
 </div>
-<div class="card help"><b>Mouse:</b> arraste para orbitar · <b>Scroll:</b> zoom · <b>WASD/setas:</b> mover câmera · <b>Shift:</b> movimento rápido · <b>duplo clique:</b> centralizar</div>
-<div class="error" id="error"><div><h2>Não foi possível abrir o 3D</h2><p>Este navegador não oferece suporte ao WebGL necessário para a visualização.</p></div></div>
+<div class="card help">${t('standaloneHelp')}</div>
+<div class="error" id="error"><div><h2>${t('couldNotOpen3D')}</h2><p>${t('webglNeeded')}</p></div></div>
 <script id="visual-maker-data" type="application/json">${dataJSON}</script>
 <script>
 (()=>{
@@ -1100,7 +1103,7 @@ canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw=drag.yaw-(e.client
 function pointerEnd(e){drag=null;canvas.classList.remove('dragging');try{canvas.releasePointerCapture(e.pointerId)}catch(_){}}canvas.addEventListener('pointerup',pointerEnd);canvas.addEventListener('pointercancel',pointerEnd);
 canvas.addEventListener('wheel',e=>{e.preventDefault();distance=clamp(distance*(e.deltaY>0?1.09:.92),2.8,180);draw()},{passive:false});canvas.addEventListener('dblclick',reset);
 window.addEventListener('keydown',e=>{const key=e.key.toLowerCase(),keys=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];if(!keys.includes(key))return;e.preventDefault();const step=Math.max(.18,Math.min(1.2,distance*.032))*(e.shiftKey?2.7:1);if(key==='w'||key==='arrowup')moveCamera(step,0);else if(key==='s'||key==='arrowdown')moveCamera(-step,0);else if(key==='a'||key==='arrowleft')moveCamera(0,-step);else moveCamera(0,step)});
-window.addEventListener('resize',draw);document.getElementById('reset').addEventListener('click',reset);document.getElementById('theme').addEventListener('click',e=>{dark=!dark;e.currentTarget.textContent=dark?'Fundo claro':'Fundo escuro';draw()});draw();
+window.addEventListener('resize',draw);document.getElementById('reset').addEventListener('click',reset);document.getElementById('theme').addEventListener('click',e=>{dark=!dark;e.currentTarget.textContent=dark?${lightBgJSON}:${darkBgJSON};draw()});draw();
 })();
 </script>
 </body>
@@ -1109,33 +1112,33 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
 
   function exportStandalone3DHTML(){
     const hasGeometry=state.elements.some(e=>['wall','room','door','window','object'].includes(e.type));
-    if(!hasGeometry){alert('Adicione elementos à planta antes de exportar a visualização 3D.');return;}
+    if(!hasGeometry){alert(t('addElements3DHTML'));return;}
     const mesh=buildExportScene();
-    if(!mesh.opaque.length&&!mesh.transparent.length){alert('Não foi possível gerar a visualização 3D deste projeto.');return;}
+    if(!mesh.opaque.length&&!mesh.transparent.length){alert(t('couldNotGenerate3DHTML'));return;}
     const html=buildStandalone3DHTML(mesh);
     downloadBlob(new Blob([html],{type:'text/html;charset=utf-8'}),`${exportBaseName()}-3d.html`);
   }
 
   function export3DModel(){
     const hasGeometry=state.elements.some(e=>['wall','room','door','window','object'].includes(e.type));
-    if(!hasGeometry){alert('Adicione elementos à planta antes de exportar o modelo 3D.');return;}
+    if(!hasGeometry){alert(t('addElements3D'));return;}
     const base=exportBaseName(),objFile=`${base}-3d.obj`,mtlFile=`${base}-3d.mtl`;
     const mesh=buildExportScene();
-    if(!mesh.opaque.length&&!mesh.transparent.length){alert('Não foi possível gerar a geometria 3D deste projeto.');return;}
+    if(!mesh.opaque.length&&!mesh.transparent.length){alert(t('couldNotGenerate3D'));return;}
     const files=meshToOBJMTL(mesh,`${base}-3d`,mtlFile);
     const readme=[
-      'Visual Maker - exportacao 3D',
+      t('readmeTitle'),
       '',
-      `Abra o arquivo ${objFile} em um programa compativel com Wavefront OBJ.`,
-      `Mantenha ${objFile} e ${mtlFile} na mesma pasta para preservar as cores.`,
-      'Escala: 1 unidade do modelo = 1 metro.',
+      t('readmeOpen',{file:objFile}),
+      t('readmeKeep',{obj:objFile,mtl:mtlFile}),
+      t('readmeScale'),
       '',
-      'O arquivo exporta a planta completa, mesmo que paredes frontais estejam ocultas somente na visualizacao do editor.'
+      t('readmeFull')
     ].join('\n');
     const zip=makeStoredZip([
       {name:objFile,data:files.obj},
       {name:mtlFile,data:files.mtl},
-      {name:'LEIA-ME.txt',data:readme}
+      {name:t('readmeFilename'),data:readme}
     ]);
     downloadBlob(zip,`${base}-3d.zip`);
   }
@@ -1215,7 +1218,7 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
     btn2d.classList.toggle('active',!is3d);btn3d.classList.toggle('active',is3d);
     btn2d.setAttribute('aria-pressed',String(!is3d));btn3d.setAttribute('aria-pressed',String(is3d));
     const status=document.getElementById('status-mode');
-    if(status&&status.lastChild)status.lastChild.textContent=is3d?' Visualização 3D':(state.blueprintOn?' Modo Blueprint':' Edição normal');
+    if(status&&status.lastChild)status.lastChild.textContent=is3d?` ${t('view3d')}`:(state.blueprintOn?` ${t('blueprintMode')}`:` ${t('normalEdit')}`);
     const empty=document.getElementById('empty-hint');if(empty)empty.classList.toggle('hidden',is3d||state.elements.length!==0);
     if(is3d){
       activateTool('select');
@@ -1439,6 +1442,14 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
     export3DModel();
   });
 
+  window.update3DLanguage=()=>{
+    if(btn3d.disabled)btn3d.title=t('webglUnsupported');
+    if(resetBtn)resetBtn.textContent=t('recenter');
+    updateHideFrontButton();
+    updateSelectionInfo();
+    const status=document.getElementById('status-mode');
+    if(status&&status.lastChild)status.lastChild.textContent=mode==='3d'?` ${t('view3d')}`:(state.blueprintOn?` ${t('blueprintMode')}`:` ${t('normalEdit')}`);
+  };
   window.refresh3DView=()=>{if(mode==='3d')draw();};
   window.export3DModel=export3DModel;
   window.exportStandalone3DHTML=exportStandalone3DHTML;

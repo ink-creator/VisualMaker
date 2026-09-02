@@ -275,3 +275,29 @@ body.dark-mode .viewer3d-help{background:color-mix(in srgb,var(--control) 92%,tr
 .properties-panel .prop-actions-tight{gap:5px;}
 .properties-panel .prop-actions-tight button{font-size:9.5px;padding-inline:6px;}
 body.view-3d .properties-panel{z-index:12;}
+
+
+/* ===== CONFIGURAÇÕES / IDIOMA ===== */
+.settings-toggle{
+  width:32px;height:32px;padding:0 !important;justify-content:center;align-items:center;
+  border:1px solid var(--border);border-radius:6px;background:var(--control);color:var(--text);
+  cursor:pointer;font-size:15px;line-height:1;
+}
+.home-settings-toggle{position:absolute;right:40px;top:0;display:flex;}
+.settings-popover{
+  position:fixed;top:62px;right:14px;z-index:1200;width:min(280px,calc(100vw - 28px));
+  padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 14px 40px rgba(18,31,45,.18);
+}
+.settings-popover-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.settings-popover-header strong{font-size:13px;}
+#settings-close{
+  width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--control);
+  cursor:pointer;font-size:18px;line-height:1;padding:0;
+}
+.settings-language-row{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text-secondary);}
+.language-select{
+  width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;
+  background:var(--control);color:var(--text);font:inherit;cursor:pointer;
+}
+body.dark-mode .settings-popover{box-shadow:0 14px 40px rgba(0,0,0,.35);}

@@ -8,8 +8,325 @@
 const svgNS = 'http://www.w3.org/2000/svg';
 const svgEl = document.getElementById('svg-canvas');
 
+/* ===== Idioma / i18n ===== */
+const LANGUAGE_KEY = 'visual-maker-language';
+const TRANSLATIONS = {
+  'pt-BR': {
+    documentTitle:'Visual Maker — Planta Baixa',
+    settings:'Configurações', language:'Idioma', portuguese:'Português (Brasil)', english:'English',
+    themeDark:'Ativar modo escuro', themeLight:'Ativar modo claro',
+    homeEyebrow:'Ferramenta de planta baixa',
+    homeSub:'Plantas baixas claras, precisas e prontas para apresentar — sem a complexidade de um software CAD.',
+    newPlan:'Nova planta', width:'Largura', length:'Comprimento', createPlan:'Criar planta', or:'ou',
+    buildManually:'Construir manualmente', myProjects:'Meus projetos', loading:'Carregando…',
+    backProjects:'Voltar aos projetos', newProject:'Novo projeto', untitled:'Sem título',
+    undo:'Desfazer', redo:'Refazer', viewMode:'Modo de visualização', blueprintMode:'Modo Blueprint',
+    blueprintTitle:'Exibir todas as medidas das paredes', save:'Salvar', saveChanges:'Salvar alterações', saved:'Salvo', export:'Exportar',
+    construction:'Construção', select:'Selecionar', wall:'Parede', door:'Porta', window:'Janela', room:'Cômodo',
+    dimension:'Cota', text:'Texto', library:'Biblioteca', libraryCategories:'Categorias da biblioteca', colorPalette:'Paleta de cores', canvas3DLabel:'Visualização 3D da planta',
+    interior:'Interior', outdoor:'Quintal', structures:'Estruturas', projectStyle:'Estilo do projeto',
+    paletteTechnical:'Técnico', paletteNatural:'Natural', paletteCoastal:'Litoral', paletteMono:'Monocromático',
+    mirror:'Espelhamento', axisX:'Eixo X', axisY:'Eixo Y', leftRight:'(esq/dir)', upDown:'(cima/baixo)',
+    grid:'Grade', active:'Ativa', spacing:'Espaçamento',
+    editable3d:'3D editável',
+    editable3dHelp:'Clique no móvel · arraste para mover · seta vertical muda altura · anel gira · Alt ignora snap',
+    noObjectSelected:'Nenhum objeto selecionado', object:'Objeto', hideFront:'Ocultar frente', showFront:'Mostrar frente', recenter:'Recentralizar',
+    emptyHint:'Escolha a ferramenta <strong>Parede</strong> e clique no canvas para começar a desenhar.',
+    typeText:'Digite o texto', normalEdit:'Edição normal', view3d:'Visualização 3D', fit:'Ajustar',
+    statusHelp:'Shift + R rotaciona · Ctrl + rolagem amplia',
+    finishProject:'Finalizar projeto', exportPlan:'Exportar planta',
+    exportDescription:'Escolha a apresentação. O arquivo será gerado em alta resolução, pronto para compartilhar ou imprimir.',
+    lightMode:'Modo claro', lightModeDesc:'Fundo claro usando a paleta de cores atual.',
+    darkMode:'Modo escuro', darkModeDesc:'Fundo escuro usando a versão noturna da paleta.',
+    blueprintDesc:'Fundo azul e medidas em todas as paredes.',
+    downloadSVG:'Baixar SVG', export3DHTML:'Visualização 3D (.html)', download3D:'Baixar 3D (OBJ + MTL)', downloadPNG:'Baixar PNG',
+    close:'Fechar', pendingChanges:'Alterações pendentes', saveBeforeExit:'Salvar antes de sair?',
+    saveBeforeReload:'Salvar antes de atualizar?',
+    unsavedExit:'Este projeto possui alterações que ainda não foram salvas. Se você sair agora, elas serão perdidas.',
+    unsavedReload:'Este projeto possui alterações que ainda não foram salvas. Se você atualizar a página agora, elas serão perdidas.',
+    lastEditUnsaved:'Última edição ainda não salva', keepEditing:'Continuar editando', exitWithoutSaving:'Sair sem salvar',
+    reloadWithoutSaving:'Atualizar sem salvar', saveAndExit:'Salvar e sair', saveAndReload:'Salvar e atualizar',
+    propertiesWall:'PAREDE', propertiesText:'TEXTO', propertiesDoor:'PORTA', propertiesWindow:'JANELA', propertiesRoom:'CÔMODO',
+    propertiesDimension:'COTA', content:'Conteúdo', size:'Tamanho', bold:'Negrito', rotation:'Rotação', color:'Cor',
+    thickness:'Espessura', height3d:'Altura 3D', wallColor3d:'Cor da parede no 3D', color3d:'Cor no 3D',
+    sillHeight:'Altura do peitoril', angle:'Ângulo', name:'Nome', area:'Área', roomColor:'Cor do ambiente',
+    floorMaterial:'Material do piso', position:'POSIÇÃO', elevation3d:'Elevação 3D', sizeAppearance:'TAMANHO E APARÊNCIA',
+    depth:'Profundidade', snapWall:'Encostar parede', snapWallTitle:'Move o objeto até a parede mais próxima',
+    snapFloor:'Encostar no chão', snapFloorTitle:'Zera a elevação do objeto', measure:'Medida',
+    mirrorFirst:'Ative o espelhamento em X ou Y na barra lateral primeiro.', duplicate:'Duplicar', delete:'Excluir',
+    addAsset:'Adicionar {name}', item:'Item',
+    floor_solid:'Cor lisa', floor_wood:'Madeira', floor_tile:'Cerâmica', floor_concrete:'Concreto', floor_grass:'Grama',
+    asset_sofa:'Sofá', asset_bed:'Cama', asset_table_interior:'Mesa', asset_desk:'Escrivaninha', asset_toilet:'Vaso',
+    asset_sink:'Pia', asset_plant_interior:'Planta', asset_fridge:'Geladeira', asset_stove:'Fogão', asset_counter:'Balcão',
+    asset_wardrobe:'Guarda-roupa', asset_tv:'TV', asset_pool:'Piscina', asset_tree:'Árvore', asset_car:'Carro',
+    asset_grill:'Churrasqueira', asset_table_outdoor:'Mesa externa', asset_plant_outdoor:'Canteiro', asset_column:'Pilar',
+    asset_halfwall:'Meia parede', asset_slidingGate:'Portão correr', asset_doubleGate:'Portão duplo',
+    asset_pedestrianGate:'Portão social', asset_pergola:'Pergolado',
+    couldNotOpenProject:'Não foi possível abrir esse projeto.',
+    totalArea:'Área total {area} m²', wallCount:'{count} paredes', addWallBeforeExport:'Adicione ao menos uma parede antes de exportar.',
+    couldNotGenerateImage:'Não foi possível gerar a imagem.', defaultFilename:'planta', suffixDark:'-escuro', suffixLight:'-claro',
+    couldNotSaveProject:'Não foi possível salvar o projeto agora.', noSavedProjects:'Nenhum projeto salvo ainda. Crie o primeiro acima.',
+    deleteProjectConfirm:'Excluir o projeto "{name}"?', deleteProject:'Excluir projeto',
+    justNow:'agora mesmo', minutesAgo:'há {count} min', hoursAgo:'há {count} h', yesterday:'ontem', daysAgo:'há {count} dias',
+    webglUnsupported:'O navegador não oferece suporte a WebGL.',
+    standalone3D:'Visualização 3D', standalone3DOffline:'Visual Maker · visualização 3D offline',
+    center:'Centralizar', centerTitle:'Centralizar a planta', toggleBackground:'Alternar fundo',
+    lightBackground:'Fundo claro', darkBackground:'Fundo escuro',
+    standaloneHelp:'<b>Mouse:</b> arraste para orbitar · <b>Scroll:</b> zoom · <b>WASD/setas:</b> mover câmera · <b>Shift:</b> movimento rápido · <b>duplo clique:</b> centralizar',
+    couldNotOpen3D:'Não foi possível abrir o 3D', webglNeeded:'Este navegador não oferece suporte ao WebGL necessário para a visualização.',
+    addElements3DHTML:'Adicione elementos à planta antes de exportar a visualização 3D.',
+    couldNotGenerate3DHTML:'Não foi possível gerar a visualização 3D deste projeto.',
+    addElements3D:'Adicione elementos à planta antes de exportar o modelo 3D.',
+    couldNotGenerate3D:'Não foi possível gerar a geometria 3D deste projeto.',
+    readmeTitle:'Visual Maker - exportacao 3D',
+    readmeOpen:'Abra o arquivo {file} em um programa compativel com Wavefront OBJ.',
+    readmeKeep:'Mantenha {obj} e {mtl} na mesma pasta para preservar as cores.',
+    readmeScale:'Escala: 1 unidade do modelo = 1 metro.',
+    readmeFull:'O arquivo exporta a planta completa, mesmo que paredes frontais estejam ocultas somente na visualizacao do editor.',
+    readmeFilename:'LEIA-ME.txt'
+  },
+  en: {
+    documentTitle:'Visual Maker — Floor Plan',
+    settings:'Settings', language:'Language', portuguese:'Português (Brasil)', english:'English',
+    themeDark:'Enable dark mode', themeLight:'Enable light mode',
+    homeEyebrow:'Floor plan tool',
+    homeSub:'Clear, precise floor plans ready to present — without the complexity of CAD software.',
+    newPlan:'New floor plan', width:'Width', length:'Length', createPlan:'Create plan', or:'or',
+    buildManually:'Build manually', myProjects:'My projects', loading:'Loading…',
+    backProjects:'Back to projects', newProject:'New project', untitled:'Untitled',
+    undo:'Undo', redo:'Redo', viewMode:'View mode', blueprintMode:'Blueprint Mode',
+    blueprintTitle:'Show all wall measurements', save:'Save', saveChanges:'Save changes', saved:'Saved', export:'Export',
+    construction:'Construction', select:'Select', wall:'Wall', door:'Door', window:'Window', room:'Room',
+    dimension:'Dimension', text:'Text', library:'Library', libraryCategories:'Library categories', colorPalette:'Color palette', canvas3DLabel:'3D floor plan view',
+    interior:'Interior', outdoor:'Outdoor', structures:'Structures', projectStyle:'Project style',
+    paletteTechnical:'Technical', paletteNatural:'Natural', paletteCoastal:'Coastal', paletteMono:'Monochrome',
+    mirror:'Mirroring', axisX:'X axis', axisY:'Y axis', leftRight:'(left/right)', upDown:'(up/down)',
+    grid:'Grid', active:'Enabled', spacing:'Spacing',
+    editable3d:'Editable 3D',
+    editable3dHelp:'Click furniture · drag to move · vertical arrow changes height · ring rotates · Alt ignores snap',
+    noObjectSelected:'No object selected', object:'Object', hideFront:'Hide front', showFront:'Show front', recenter:'Recenter',
+    emptyHint:'Choose the <strong>Wall</strong> tool and click the canvas to start drawing.',
+    typeText:'Type text', normalEdit:'Normal editing', view3d:'3D View', fit:'Fit',
+    statusHelp:'Shift + R rotates · Ctrl + scroll zooms',
+    finishProject:'Finish project', exportPlan:'Export floor plan',
+    exportDescription:'Choose the presentation style. The file will be generated in high resolution, ready to share or print.',
+    lightMode:'Light mode', lightModeDesc:'Light background using the current color palette.',
+    darkMode:'Dark mode', darkModeDesc:'Dark background using the night version of the palette.',
+    blueprintDesc:'Blue background with measurements on every wall.',
+    downloadSVG:'Download SVG', export3DHTML:'3D View (.html)', download3D:'Download 3D (OBJ + MTL)', downloadPNG:'Download PNG',
+    close:'Close', pendingChanges:'Pending changes', saveBeforeExit:'Save before leaving?',
+    saveBeforeReload:'Save before reloading?',
+    unsavedExit:'This project has changes that have not been saved yet. If you leave now, they will be lost.',
+    unsavedReload:'This project has changes that have not been saved yet. If you reload the page now, they will be lost.',
+    lastEditUnsaved:'Latest edit is not saved yet', keepEditing:'Keep editing', exitWithoutSaving:'Leave without saving',
+    reloadWithoutSaving:'Reload without saving', saveAndExit:'Save and leave', saveAndReload:'Save and reload',
+    propertiesWall:'WALL', propertiesText:'TEXT', propertiesDoor:'DOOR', propertiesWindow:'WINDOW', propertiesRoom:'ROOM',
+    propertiesDimension:'DIMENSION', content:'Content', size:'Size', bold:'Bold', rotation:'Rotation', color:'Color',
+    thickness:'Thickness', height3d:'3D height', wallColor3d:'Wall color in 3D', color3d:'3D color',
+    sillHeight:'Sill height', angle:'Angle', name:'Name', area:'Area', roomColor:'Room color',
+    floorMaterial:'Floor material', position:'POSITION', elevation3d:'3D elevation', sizeAppearance:'SIZE & APPEARANCE',
+    depth:'Depth', snapWall:'Snap to wall', snapWallTitle:'Moves the object to the nearest wall',
+    snapFloor:'Place on floor', snapFloorTitle:'Resets the object elevation', measure:'Measurement',
+    mirrorFirst:'Enable X or Y mirroring in the sidebar first.', duplicate:'Duplicate', delete:'Delete',
+    addAsset:'Add {name}', item:'Item',
+    floor_solid:'Solid color', floor_wood:'Wood', floor_tile:'Tile', floor_concrete:'Concrete', floor_grass:'Grass',
+    asset_sofa:'Sofa', asset_bed:'Bed', asset_table_interior:'Table', asset_desk:'Desk', asset_toilet:'Toilet',
+    asset_sink:'Sink', asset_plant_interior:'Plant', asset_fridge:'Fridge', asset_stove:'Stove', asset_counter:'Counter',
+    asset_wardrobe:'Wardrobe', asset_tv:'TV', asset_pool:'Pool', asset_tree:'Tree', asset_car:'Car',
+    asset_grill:'Grill', asset_table_outdoor:'Outdoor table', asset_plant_outdoor:'Planter', asset_column:'Column',
+    asset_halfwall:'Half wall', asset_slidingGate:'Sliding gate', asset_doubleGate:'Double gate',
+    asset_pedestrianGate:'Pedestrian gate', asset_pergola:'Pergola',
+    couldNotOpenProject:'Could not open this project.',
+    totalArea:'Total area {area} m²', wallCount:'{count} walls', addWallBeforeExport:'Add at least one wall before exporting.',
+    couldNotGenerateImage:'Could not generate the image.', defaultFilename:'floor-plan', suffixDark:'-dark', suffixLight:'-light',
+    couldNotSaveProject:'Could not save the project right now.', noSavedProjects:'No saved projects yet. Create your first one above.',
+    deleteProjectConfirm:'Delete the project "{name}"?', deleteProject:'Delete project',
+    justNow:'just now', minutesAgo:'{count} min ago', hoursAgo:'{count} h ago', yesterday:'yesterday', daysAgo:'{count} days ago',
+    webglUnsupported:'This browser does not support WebGL.',
+    standalone3D:'3D View', standalone3DOffline:'Visual Maker · offline 3D view',
+    center:'Center', centerTitle:'Center the floor plan', toggleBackground:'Toggle background',
+    lightBackground:'Light background', darkBackground:'Dark background',
+    standaloneHelp:'<b>Mouse:</b> drag to orbit · <b>Scroll:</b> zoom · <b>WASD/arrows:</b> move camera · <b>Shift:</b> fast movement · <b>double click:</b> center',
+    couldNotOpen3D:'Could not open 3D', webglNeeded:'This browser does not support the WebGL required for this view.',
+    addElements3DHTML:'Add elements to the floor plan before exporting the 3D view.',
+    couldNotGenerate3DHTML:'Could not generate the 3D view for this project.',
+    addElements3D:'Add elements to the floor plan before exporting the 3D model.',
+    couldNotGenerate3D:'Could not generate the 3D geometry for this project.',
+    readmeTitle:'Visual Maker - 3D export',
+    readmeOpen:'Open {file} in a program compatible with Wavefront OBJ.',
+    readmeKeep:'Keep {obj} and {mtl} in the same folder to preserve colors.',
+    readmeScale:'Scale: 1 model unit = 1 meter.',
+    readmeFull:'The exported file contains the complete floor plan, even if front walls are hidden only in the editor view.',
+    readmeFilename:'README.txt'
+  }
+};
+
+let currentLanguage = 'pt-BR';
+
+function t(key, vars){
+  const table = TRANSLATIONS[currentLanguage] || TRANSLATIONS['pt-BR'];
+  let value = table[key] ?? TRANSLATIONS['pt-BR'][key] ?? key;
+  if(vars){
+    Object.entries(vars).forEach(([name,replacement])=>{
+      value = value.replaceAll(`{${name}}`, String(replacement));
+    });
+  }
+  return value;
+}
+window.t = t;
+window.getCurrentLanguage = ()=>currentLanguage;
+
+function getAssetLabel(kind, category, fallback){
+  const suffix = (kind==='table' || kind==='plant') ? `_${category||'interior'}` : '';
+  const key = `asset_${kind}${suffix}`;
+  const translated = t(key);
+  return translated===key ? (fallback || t('item')) : translated;
+}
+window.getAssetLabel = getAssetLabel;
+
+function localizedNumber(value, digits=2){
+  return Number(value).toLocaleString(currentLanguage==='en'?'en-US':'pt-BR', {
+    minimumFractionDigits:digits,
+    maximumFractionDigits:digits
+  });
+}
+window.localizedNumber = localizedNumber;
+
+function setText(selector,key){
+  const el=document.querySelector(selector);
+  if(el) el.textContent=t(key);
+}
+function setHTML(selector,key){
+  const el=document.querySelector(selector);
+  if(el) el.innerHTML=t(key);
+}
+function setTitle(selector,key){
+  document.querySelectorAll(selector).forEach(el=>{
+    el.title=t(key);
+    el.setAttribute('aria-label',t(key));
+  });
+}
+function setLeadingLabel(inputId,key){
+  const input=document.getElementById(inputId);
+  const label=input&&input.closest('label');
+  if(!label)return;
+  const node=[...label.childNodes].find(n=>n.nodeType===Node.TEXT_NODE && n.textContent.trim());
+  if(node)node.textContent=t(key)+'\n';
+}
+function setInlineLabel(inputId,key){
+  const input=document.getElementById(inputId);
+  const label=input&&input.closest('label');
+  if(!label)return;
+  const node=[...label.childNodes].find(n=>n.nodeType===Node.TEXT_NODE && n.textContent.trim());
+  if(node)node.textContent=' '+t(key)+' ';
+}
+
+function applyStaticTranslations(){
+  document.documentElement.lang=currentLanguage;
+  document.title=t('documentTitle');
+
+  setText('.home-eyebrow','homeEyebrow');
+  setText('.home-sub','homeSub');
+  setText('.new-project-card h2','newPlan');
+  setLeadingLabel('new-width','width');
+  setLeadingLabel('new-height','length');
+  setText('#btn-create-dims','createPlan');
+  setText('.divider-or','or');
+  setText('#btn-create-manual','buildManually');
+  setText('.projects-section-title','myProjects');
+
+  setTitle('#btn-home','backProjects');
+  setText('#btn-undo span','undo');
+  setText('#btn-redo span','redo');
+  const viewSwitch=document.querySelector('.view-mode-switch');if(viewSwitch)viewSwitch.setAttribute('aria-label',t('viewMode'));
+  const blueprintLabel=document.querySelector('.blueprint-switch');if(blueprintLabel)blueprintLabel.title=t('blueprintTitle');
+  setText('.blueprint-switch > span:last-child','blueprintMode');
+  setText('#btn-export span','export');
+
+  const staticTools={select:'select',wall:'wall',door:'door',window:'window',room:'room',cota:'dimension',text:'text'};
+  Object.entries(staticTools).forEach(([toolName,key])=>{
+    const btn=document.querySelector(`.tool-btn[data-tool="${toolName}"]`);
+    if(!btn)return;
+    const span=btn.querySelector('span');if(span)span.textContent=t(key);
+    const shortcut=btn.querySelector('kbd')?.textContent||'';
+    btn.title=`${t(key)}${shortcut?` (${shortcut})`:''}`;
+  });
+  document.querySelectorAll('.mini-label').forEach((el,index)=>{
+    const keys=['construction','library','projectStyle','mirror','grid'];
+    if(keys[index])el.textContent=t(keys[index]);
+  });
+  const libTabs={interior:'interior',outdoor:'outdoor',structure:'structures'};
+  Object.entries(libTabs).forEach(([category,key])=>{const el=document.querySelector(`.library-tab[data-category="${category}"]`);if(el)el.textContent=t(key);});
+  const libTablist=document.querySelector('.library-tabs');if(libTablist)libTablist.setAttribute('aria-label',t('libraryCategories'));
+  const paletteList=document.getElementById('palette-list');if(paletteList)paletteList.setAttribute('aria-label',t('colorPalette'));
+  const canvas3d=document.getElementById('canvas-3d');if(canvas3d)canvas3d.setAttribute('aria-label',t('canvas3DLabel'));
+  const paletteKeys={technical:'paletteTechnical',warm:'paletteNatural',coastal:'paletteCoastal',mono:'paletteMono'};
+  Object.entries(paletteKeys).forEach(([name,key])=>{const el=document.querySelector(`.palette-option[data-palette="${name}"] > span:last-child`);if(el)el.textContent=t(key);});
+  setInlineLabel('mirror-x-toggle','axisX');
+  setInlineLabel('mirror-y-toggle','axisY');
+  const hints=document.querySelectorAll('.mirror-controls .hint');if(hints[0])hints[0].textContent=t('leftRight');if(hints[1])hints[1].textContent=t('upDown');
+  setInlineLabel('grid-toggle','active');
+  setLeadingLabel('grid-spacing','spacing');
+
+  setText('#viewer3d-help strong','editable3d');
+  const helpSpans=document.querySelectorAll('#viewer3d-help > div:first-child > span');
+  if(helpSpans[0])helpSpans[0].textContent=t('editable3dHelp');
+  if(!selectedId && helpSpans[1])helpSpans[1].textContent=t('noObjectSelected');
+  setText('#viewer3d-reset','recenter');
+  setHTML('#empty-hint p','emptyHint');
+  const textEditor=document.getElementById('text-editor-input');if(textEditor)textEditor.placeholder=t('typeText');
+  setText('#zoom-fit','fit');
+  setText('.status-help','statusHelp');
+
+  setText('#export-modal .dialog-kicker','finishProject');
+  setText('#export-title','exportPlan');
+  setText('#export-modal > .export-dialog > .dialog-copy','exportDescription');
+  const exportModes=document.querySelectorAll('.export-mode');
+  if(exportModes[0]){const s=exportModes[0].querySelector('strong'),d=exportModes[0].querySelector('small');if(s)s.textContent=t('lightMode');if(d)d.textContent=t('lightModeDesc');}
+  if(exportModes[1]){const s=exportModes[1].querySelector('strong'),d=exportModes[1].querySelector('small');if(s)s.textContent=t('darkMode');if(d)d.textContent=t('darkModeDesc');}
+  if(exportModes[2]){const s=exportModes[2].querySelector('strong'),d=exportModes[2].querySelector('small');if(s)s.textContent='Blueprint';if(d)d.textContent=t('blueprintDesc');}
+  setText('#export-svg','downloadSVG');setText('#export-3d-html','export3DHTML');setText('#export-3d','download3D');setText('#export-png','downloadPNG');
+  const exportClose=document.getElementById('export-close');if(exportClose)exportClose.setAttribute('aria-label',t('close'));
+
+  setText('#unsaved-modal .dialog-kicker','pendingChanges');
+  setText('.unsaved-summary span:last-child','lastEditUnsaved');
+  setText('#unsaved-cancel','keepEditing');
+
+  setText('#settings-panel .settings-title','settings');
+  setText('#settings-panel label > span','language');
+  const panel=document.getElementById('settings-panel');if(panel)panel.setAttribute('aria-label',t('settings'));
+  const activeAssetCategory=document.querySelector('.library-tab.active')?.dataset.category||'interior';
+  renderAssetLibrary(activeAssetCategory);
+  const settingsClose=document.getElementById('settings-close');if(settingsClose){settingsClose.title=t('close');settingsClose.setAttribute('aria-label',t('close'));}
+  setTitle('#settings-toggle,#home-settings-toggle','settings');
+
+  updateSaveButton();
+  applyProjectAppearance();
+  setDarkMode(document.body.classList.contains('dark-mode'),false);
+}
+
+function setLanguage(language,savePreference=true){
+  currentLanguage = language==='en' ? 'en' : 'pt-BR';
+  document.querySelectorAll('.language-select').forEach(select=>{select.value=currentLanguage;});
+  applyStaticTranslations();
+  if(document.getElementById('screen-home').classList.contains('active')) renderHomeScreen();
+  const activeCategory=document.querySelector('.library-tab.active')?.dataset.category||'interior';
+  renderAssetLibrary(activeCategory);
+  updatePropertiesPanel();
+  if(typeof window.update3DLanguage==='function')window.update3DLanguage();
+  if(savePreference){try{localStorage.setItem(LANGUAGE_KEY,currentLanguage);}catch(e){/* preferência não persistida */}}
+}
+window.setVisualMakerLanguage=setLanguage;
+
+function applyStoredLanguage(){
+  let preference='pt-BR';
+  try{preference=localStorage.getItem(LANGUAGE_KEY)||'pt-BR';}catch(e){}
+  currentLanguage=preference==='en'?'en':'pt-BR';
+  document.querySelectorAll('.language-select').forEach(select=>{select.value=currentLanguage;});
+}
+
 /* ===== Estado global ===== */
-let state = { projectId:null, projectName:'Novo projeto', elements:[], gridSpacing:0.5, gridOn:true, blueprintOn:false, palette:'technical', view3d:null };
+let state = { projectId:null, projectName:t('newProject'), elements:[], gridSpacing:0.5, gridOn:true, blueprintOn:false, palette:'technical', view3d:null };
 let view = { pxPerMeter:60, panX:80, panY:80 };
 let tool = 'select';
 let selectedId = null;
@@ -63,11 +380,11 @@ const assetLibrary = [
 ];
 
 const floorMaterials = {
-  solid:'Cor lisa',
-  wood:'Madeira',
-  tile:'Cerâmica',
-  concrete:'Concreto',
-  grass:'Grama'
+  solid:'floor_solid',
+  wood:'floor_wood',
+  tile:'floor_tile',
+  concrete:'floor_concrete',
+  grass:'floor_grass'
 };
 function floorMaterialBase(room, theme){
   if(room && room.color) return room.color;
@@ -107,11 +424,11 @@ function markUnsaved(){ unsavedChanges = true; updateSaveButton(); }
 function updateSaveButton(){
   const btn = document.getElementById('btn-save');
   btn.classList.toggle('unsaved', unsavedChanges);
-  btn.innerHTML = unsavedChanges ? '<span>Salvar alterações</span>' : '<span>Salvar</span>';
+  btn.innerHTML = `<span>${unsavedChanges ? t('saveChanges') : t('save')}</span>`;
 }
 function flashSaveIndicator(){
   const btn = document.getElementById('btn-save');
-  btn.innerHTML = '<span>Salvo</span>';
+  btn.innerHTML = `<span>${t('saved')}</span>`;
   setTimeout(updateSaveButton, 1100);
 }
 
@@ -209,17 +526,17 @@ function updatePropertiesPanel(){
     let angle = Math.round(Math.atan2(el.y2-el.y1, el.x2-el.x1)*180/Math.PI);
     if (angle<0) angle += 360;
     panel.innerHTML = `
-      <div class="prop-header">PAREDE</div>
-      <label>Comprimento<input id="prop-length" type="text" value="${escapeAttr(formatMeters(length))}"></label>
-      <label>Espessura<input id="prop-thickness" type="text" value="${escapeAttr(formatMeters(el.thickness))}"></label>
-      <label>Altura 3D<input id="prop-wall-height" type="text" value="${escapeAttr(formatMeters(el.height||2.7))}"></label>
-      <label>Cor da parede no 3D<input id="prop-wall-color" type="color" value="${el.color||'#F0EEE9'}"></label>
-      <label>Rotação<input id="prop-rot-display" type="text" value="${angle}°" readonly></label>
+      <div class="prop-header">${t('propertiesWall')}</div>
+      <label>${t('length')}<input id="prop-length" type="text" value="${escapeAttr(formatMeters(length))}"></label>
+      <label>${t('thickness')}<input id="prop-thickness" type="text" value="${escapeAttr(formatMeters(el.thickness))}"></label>
+      <label>${t('height3d')}<input id="prop-wall-height" type="text" value="${escapeAttr(formatMeters(el.height||2.7))}"></label>
+      <label>${t('wallColor3d')}<input id="prop-wall-color" type="color" value="${el.color||'#F0EEE9'}"></label>
+      <label>${t('rotation')}<input id="prop-rot-display" type="text" value="${angle}°" readonly></label>
       <div class="prop-actions">
-        <button id="prop-mirror" class="btn-secondary">Espelhar</button>
-        <button id="prop-duplicate" class="btn-secondary">Duplicar</button>
+        <button id="prop-mirror" class="btn-secondary">${t('mirror')}</button>
+        <button id="prop-duplicate" class="btn-secondary">${t('duplicate')}</button>
       </div>
-      <div class="prop-actions"><button id="prop-delete" class="btn-danger">Excluir</button></div>`;
+      <div class="prop-actions"><button id="prop-delete" class="btn-danger">${t('delete')}</button></div>`;
     const lenInput = document.getElementById('prop-length');
     lenInput.addEventListener('change', ()=>{
       const newLen = parseMeters(lenInput.value);
@@ -247,19 +564,19 @@ function updatePropertiesPanel(){
     wallColorInput.addEventListener('change', ()=>pushHistory());
   } else if (el.type==='text'){
     panel.innerHTML = `
-      <div class="prop-header">TEXTO</div>
-      <label>Conteúdo<input id="prop-content" type="text" value="${escapeAttr(el.content)}"></label>
-      <label>Tamanho<input id="prop-size" type="number" value="${el.size||16}" min="8" max="72"></label>
-      <label class="check-row"><input id="prop-bold" type="checkbox" ${el.bold?'checked':''}> Negrito</label>
-      <label>Rotação (°)<input id="prop-rot" type="number" value="${el.rotation||0}" step="15"></label>
-      <label>Cor<input id="prop-color" type="color" value="${el.color||'#1B2430'}"></label>
+      <div class="prop-header">${t('propertiesText')}</div>
+      <label>${t('content')}<input id="prop-content" type="text" value="${escapeAttr(el.content)}"></label>
+      <label>${t('size')}<input id="prop-size" type="number" value="${el.size||16}" min="8" max="72"></label>
+      <label class="check-row"><input id="prop-bold" type="checkbox" ${el.bold?'checked':''}> ${t('bold')}</label>
+      <label>${t('rotation')} (°)<input id="prop-rot" type="number" value="${el.rotation||0}" step="15"></label>
+      <label>${t('color')}<input id="prop-color" type="color" value="${el.color||'#1B2430'}"></label>
       <div class="prop-actions">
-        <button id="prop-mirror" class="btn-secondary">Espelhar</button>
-        <button id="prop-duplicate" class="btn-secondary">Duplicar</button>
+        <button id="prop-mirror" class="btn-secondary">${t('mirror')}</button>
+        <button id="prop-duplicate" class="btn-secondary">${t('duplicate')}</button>
       </div>
-      <div class="prop-actions"><button id="prop-delete" class="btn-danger">Excluir</button></div>`;
+      <div class="prop-actions"><button id="prop-delete" class="btn-danger">${t('delete')}</button></div>`;
     const contentInput = document.getElementById('prop-content');
-    contentInput.addEventListener('change', ()=>{ el.content=contentInput.value||'Texto'; pushHistory(); render(); });
+    contentInput.addEventListener('change', ()=>{ el.content=contentInput.value||t('text'); pushHistory(); render(); });
     bindEnterBlur(contentInput);
     document.getElementById('prop-size').addEventListener('change', e=>{ el.size=parseFloat(e.target.value)||16; pushHistory(); render(); });
     document.getElementById('prop-bold').addEventListener('change', e=>{ el.bold=e.target.checked; pushHistory(); render(); });
@@ -268,19 +585,19 @@ function updatePropertiesPanel(){
     colorInput.addEventListener('input', ()=>{ el.color=colorInput.value; render(); });
     colorInput.addEventListener('change', ()=>{ pushHistory(); });
   } else if (el.type==='door' || el.type==='window'){
-    const label = el.type==='door' ? 'PORTA' : 'JANELA';
+    const label = el.type==='door' ? t('propertiesDoor') : t('propertiesWindow');
     panel.innerHTML = `
       <div class="prop-header">${label}</div>
-      <label>Largura<input id="prop-width" type="text" value="${escapeAttr(formatMeters(el.width))}"></label>
-      <label>Altura 3D<input id="prop-opening-height" type="text" value="${escapeAttr(formatMeters(el.height||(el.type==='door'?2.1:1.2)))}"></label>
-      ${el.type==='window'?`<label>Altura do peitoril<input id="prop-sill-height" type="text" value="${escapeAttr(formatMeters(el.sillHeight==null?0.9:el.sillHeight))}"></label>`:''}
-      <label>Cor no 3D<input id="prop-opening-color" type="color" value="${el.color||(el.type==='door'?'#A56B43':'#9CC9DF')}"></label>
-      <label>Ângulo (°)<input id="prop-angle" type="number" value="${Math.round(el.angle||0)}" step="15"></label>
+      <label>${t('width')}<input id="prop-width" type="text" value="${escapeAttr(formatMeters(el.width))}"></label>
+      <label>${t('height3d')}<input id="prop-opening-height" type="text" value="${escapeAttr(formatMeters(el.height||(el.type==='door'?2.1:1.2)))}"></label>
+      ${el.type==='window'?`<label>${t('sillHeight')}<input id="prop-sill-height" type="text" value="${escapeAttr(formatMeters(el.sillHeight==null?0.9:el.sillHeight))}"></label>`:''}
+      <label>${t('color3d')}<input id="prop-opening-color" type="color" value="${el.color||(el.type==='door'?'#A56B43':'#9CC9DF')}"></label>
+      <label>${t('angle')} (°)<input id="prop-angle" type="number" value="${Math.round(el.angle||0)}" step="15"></label>
       <div class="prop-actions">
-        <button id="prop-mirror" class="btn-secondary">Espelhar</button>
-        <button id="prop-duplicate" class="btn-secondary">Duplicar</button>
+        <button id="prop-mirror" class="btn-secondary">${t('mirror')}</button>
+        <button id="prop-duplicate" class="btn-secondary">${t('duplicate')}</button>
       </div>
-      <div class="prop-actions"><button id="prop-delete" class="btn-danger">Excluir</button></div>`;
+      <div class="prop-actions"><button id="prop-delete" class="btn-danger">${t('delete')}</button></div>`;
     const widthInput = document.getElementById('prop-width');
     widthInput.addEventListener('change', ()=>{ const w=parseMeters(widthInput.value); if (w&&w>0.1){ el.width=w; pushHistory(); render(); } });
     bindEnterBlur(widthInput);
@@ -296,22 +613,22 @@ function updatePropertiesPanel(){
   } else if (el.type==='room'){
     const area = el.w*el.h;
     panel.innerHTML = `
-      <div class="prop-header">CÔMODO</div>
-      <label>Nome<input id="prop-room-name" type="text" value="${escapeAttr(el.name)}"></label>
-      <label>Largura<input id="prop-room-w" type="text" value="${escapeAttr(formatMeters(el.w))}"></label>
-      <label>Espessura<input id="prop-room-h" type="text" value="${escapeAttr(formatMeters(el.h))}"></label>
-      <label>Área<input id="prop-room-area" type="text" value="${area.toFixed(2).replace('.',',')} m²" readonly></label>
-      <label>Cor do ambiente<input id="prop-room-color" type="color" value="${floorMaterialBase(el)}"></label>
-      <label>Material do piso<select id="prop-room-material">
-        ${Object.entries(floorMaterials).map(([value,label])=>`<option value="${value}" ${(el.material||'solid')===value?'selected':''}>${label}</option>`).join('')}
+      <div class="prop-header">${t('propertiesRoom')}</div>
+      <label>${t('name')}<input id="prop-room-name" type="text" value="${escapeAttr(el.name)}"></label>
+      <label>${t('width')}<input id="prop-room-w" type="text" value="${escapeAttr(formatMeters(el.w))}"></label>
+      <label>${t('length')}<input id="prop-room-h" type="text" value="${escapeAttr(formatMeters(el.h))}"></label>
+      <label>${t('area')}<input id="prop-room-area" type="text" value="${localizedNumber(area)} m²" readonly></label>
+      <label>${t('roomColor')}<input id="prop-room-color" type="color" value="${floorMaterialBase(el)}"></label>
+      <label>${t('floorMaterial')}<select id="prop-room-material">
+        ${Object.entries(floorMaterials).map(([value,key])=>`<option value="${value}" ${(el.material||'solid')===value?'selected':''}>${t(key)}</option>`).join('')}
       </select></label>
       <div class="prop-actions">
-        <button id="prop-mirror" class="btn-secondary">Espelhar</button>
-        <button id="prop-duplicate" class="btn-secondary">Duplicar</button>
+        <button id="prop-mirror" class="btn-secondary">${t('mirror')}</button>
+        <button id="prop-duplicate" class="btn-secondary">${t('duplicate')}</button>
       </div>
-      <div class="prop-actions"><button id="prop-delete" class="btn-danger">Excluir</button></div>`;
+      <div class="prop-actions"><button id="prop-delete" class="btn-danger">${t('delete')}</button></div>`;
     const nameInput = document.getElementById('prop-room-name');
-    nameInput.addEventListener('change', ()=>{ el.name=nameInput.value||'Cômodo'; pushHistory(); render(); });
+    nameInput.addEventListener('change', ()=>{ el.name=nameInput.value||t('room'); pushHistory(); render(); });
     bindEnterBlur(nameInput);
     const wInput = document.getElementById('prop-room-w');
     wInput.addEventListener('change', ()=>{ const w=parseMeters(wInput.value); if (w&&w>0.1){ el.w=w; pushHistory(); render(); updatePropertiesPanel(); } });
@@ -332,24 +649,24 @@ function updatePropertiesPanel(){
     });
   } else if (el.type==='object'){
     panel.innerHTML = `
-      <div class="prop-header">${escapeHTML(el.label||'ITEM')}</div>
-      <div class="prop-subheader">POSIÇÃO</div>
+      <div class="prop-header">${escapeHTML(getAssetLabel(el.kind,el.category,el.label||t('item')))}</div>
+      <div class="prop-subheader">${t('position')}</div>
       <div class="prop-two-cols">
         <label>X<input id="prop-object-x" type="text" value="${escapeAttr(`${Number(el.x||0).toFixed(2)} m`)}"></label>
         <label>Y<input id="prop-object-y" type="text" value="${escapeAttr(`${Number(el.y||0).toFixed(2)} m`)}"></label>
       </div>
-      <label>Elevação 3D<input id="prop-elevation" type="text" value="${escapeAttr(formatMeters(el.elevation||0))}"></label>
-      <label>Rotação (°)<input id="prop-rot" type="number" value="${Math.round((el.rotation||0)*100)/100}" step="15"></label>
+      <label>${t('elevation3d')}<input id="prop-elevation" type="text" value="${escapeAttr(formatMeters(el.elevation||0))}"></label>
+      <label>${t('rotation')} (°)<input id="prop-rot" type="number" value="${Math.round((el.rotation||0)*100)/100}" step="15"></label>
       <div class="prop-actions prop-actions-tight">
-        <button id="prop-snap-wall" class="btn-secondary" title="Move o objeto até a parede mais próxima">Encostar parede</button>
-        <button id="prop-floor" class="btn-secondary" title="Zera a elevação do objeto">Encostar no chão</button>
+        <button id="prop-snap-wall" class="btn-secondary" title="${t('snapWallTitle')}">${t('snapWall')}</button>
+        <button id="prop-floor" class="btn-secondary" title="${t('snapFloorTitle')}">${t('snapFloor')}</button>
       </div>
-      <div class="prop-subheader">TAMANHO E APARÊNCIA</div>
-      <label>Largura<input id="prop-object-w" type="text" value="${escapeAttr(formatMeters(el.w))}"></label>
-      <label>Profundidade<input id="prop-object-h" type="text" value="${escapeAttr(formatMeters(el.h))}"></label>
-      <label>Cor<input id="prop-color" type="color" value="${el.color||getPalette().object}"></label>
-      <div class="prop-actions"><button id="prop-mirror" class="btn-secondary">Espelhar</button><button id="prop-duplicate" class="btn-secondary">Duplicar</button></div>
-      <div class="prop-actions"><button id="prop-delete" class="btn-danger">Excluir</button></div>`;
+      <div class="prop-subheader">${t('sizeAppearance')}</div>
+      <label>${t('width')}<input id="prop-object-w" type="text" value="${escapeAttr(formatMeters(el.w))}"></label>
+      <label>${t('depth')}<input id="prop-object-h" type="text" value="${escapeAttr(formatMeters(el.h))}"></label>
+      <label>${t('color')}<input id="prop-color" type="color" value="${el.color||getPalette().object}"></label>
+      <div class="prop-actions"><button id="prop-mirror" class="btn-secondary">${t('mirror')}</button><button id="prop-duplicate" class="btn-secondary">${t('duplicate')}</button></div>
+      <div class="prop-actions"><button id="prop-delete" class="btn-danger">${t('delete')}</button></div>`;
 
     const xInput=document.getElementById('prop-object-x'),yInput=document.getElementById('prop-object-y');
     const applyAxis=(input,key)=>{
@@ -381,10 +698,10 @@ function updatePropertiesPanel(){
   } else if (el.type==='cota'){
     const length = Math.hypot(el.x2-el.x1, el.y2-el.y1);
     panel.innerHTML = `
-      <div class="prop-header">COTA</div>
-      <label>Medida<input id="prop-cota-len" type="text" value="${escapeAttr(formatMeters(length))}"></label>
-      <div class="prop-actions"><button id="prop-duplicate" class="btn-secondary">Duplicar</button></div>
-      <div class="prop-actions"><button id="prop-delete" class="btn-danger">Excluir</button></div>`;
+      <div class="prop-header">${t('propertiesDimension')}</div>
+      <label>${t('measure')}<input id="prop-cota-len" type="text" value="${escapeAttr(formatMeters(length))}"></label>
+      <div class="prop-actions"><button id="prop-duplicate" class="btn-secondary">${t('duplicate')}</button></div>
+      <div class="prop-actions"><button id="prop-delete" class="btn-danger">${t('delete')}</button></div>`;
     const lenInput = document.getElementById('prop-cota-len');
     lenInput.addEventListener('change', ()=>{
       const newLen = parseMeters(lenInput.value);
@@ -398,7 +715,7 @@ function updatePropertiesPanel(){
   }
   const mirrorBtn = document.getElementById('prop-mirror');
   if (mirrorBtn) mirrorBtn.addEventListener('click', ()=>{
-    if (!mirrorState.xActive && !mirrorState.yActive){ alert('Ative o espelhamento em X ou Y na barra lateral primeiro.'); return; }
+    if (!mirrorState.xActive && !mirrorState.yActive){ alert(t('mirrorFirst')); return; }
     const created = addMirroredCopiesFor(el);
     if (created.length){ selectedId = created[0].id; pushHistory(); render(); updatePropertiesPanel(); }
   });
@@ -529,14 +846,14 @@ function assetIcon(kind){
 function renderAssetLibrary(category){
   const grid=document.getElementById('asset-grid');grid.innerHTML='';
   assetLibrary.filter(a=>a.category===category).forEach(asset=>{
-    const btn=document.createElement('button');btn.className='asset-btn';btn.dataset.kind=asset.kind;btn.title=`Adicionar ${asset.label}`;
-    btn.innerHTML=assetIcon(asset.kind)+`<span>${escapeHTML(asset.label)}</span>`;
+    const btn=document.createElement('button');btn.className='asset-btn';btn.dataset.kind=asset.kind;btn.title=t('addAsset',{name:getAssetLabel(asset.kind,asset.category,asset.label)});
+    btn.innerHTML=assetIcon(asset.kind)+`<span>${escapeHTML(getAssetLabel(asset.kind,asset.category,asset.label))}</span>`;
     btn.addEventListener('click',()=>{selectedAssetKind=asset.kind;selectedAssetCategory=asset.category;selectedAssetLabel=asset.label;tool='object';clearDrafts();updateToolButtons();});
     grid.appendChild(btn);
   });
   updateToolButtons();
 }
-let selectedAssetCategory='interior',selectedAssetLabel='Item';
+let selectedAssetCategory='interior',selectedAssetLabel=t('item');
 document.querySelectorAll('.library-tab').forEach(btn=>btn.addEventListener('click',()=>{
   document.querySelectorAll('.library-tab').forEach(b=>b.classList.toggle('active',b===btn));renderAssetLibrary(btn.dataset.category);
 }));
@@ -693,7 +1010,7 @@ window.addEventListener('mouseup', ()=>{
     const x=Math.min(roomDraft.startX,roomDraft.curX), y=Math.min(roomDraft.startY,roomDraft.curY);
     const w=Math.abs(roomDraft.curX-roomDraft.startX), h=Math.abs(roomDraft.curY-roomDraft.startY);
     if (w>0.15 && h>0.15){
-      const newEl = addRoom(x,y,w,h,'Cômodo');
+      const newEl = addRoom(x,y,w,h,t('room'));
       addMirroredCopiesFor(newEl);
       selectedId = newEl.id;
       pushHistory(); updatePropertiesPanel();
@@ -765,7 +1082,7 @@ window.addEventListener('keydown', (e)=>{
 
 /* ===== Navegação entre telas ===== */
 function startNewProject(){
-  state = { projectId:null, projectName:'Novo projeto', elements:[], gridSpacing:0.5, gridOn:true, blueprintOn:false, palette:'technical', view3d:null };
+  state = { projectId:null, projectName:t('newProject'), elements:[], gridSpacing:0.5, gridOn:true, blueprintOn:false, palette:'technical', view3d:null };
   selectedId = null;
   mirrorState = { xActive:false, yActive:false, axisX:null, axisY:null };
   view = { pxPerMeter:60, panX:80, panY:80 };
@@ -806,7 +1123,7 @@ function goHome(){
 }
 async function openProject(id){
   const ok = await loadProjectData(id);
-  if (!ok){ alert('Não foi possível abrir esse projeto.'); return; }
+  if (!ok){ alert(t('couldNotOpenProject')); return; }
   mirrorState = { xActive:false, yActive:false, axisX:null, axisY:null };
   view = { pxPerMeter:60, panX:80, panY:80 };
   goToEditor();
@@ -819,14 +1136,14 @@ function applyProjectAppearance(){
   document.body.style.setProperty('--object-fill',p.object);
   document.body.style.setProperty('--object-stroke',p.stroke);
   document.querySelectorAll('.palette-option').forEach(btn=>btn.classList.toggle('active',btn.dataset.palette===(state.palette||'technical')));
-  const status=document.getElementById('status-mode');status.lastChild.textContent=state.blueprintOn?' Modo Blueprint':' Edição normal';
+  const status=document.getElementById('status-mode');status.lastChild.textContent=state.blueprintOn?` ${t('blueprintMode')}`:` ${t('normalEdit')}`;
 }
 function setDarkMode(active,savePreference){
   document.body.classList.toggle('dark-mode',active);
   document.querySelectorAll('.theme-toggle').forEach(btn=>{
     btn.setAttribute('aria-pressed',String(active));
-    btn.setAttribute('aria-label',active?'Ativar modo claro':'Ativar modo escuro');
-    btn.title=active?'Ativar modo claro':'Ativar modo escuro';
+    btn.setAttribute('aria-label',active?t('themeLight'):t('themeDark'));
+    btn.title=active?t('themeLight'):t('themeDark');
   });
   applyProjectAppearance();
   if(document.getElementById('screen-editor').classList.contains('active')) render();
@@ -874,7 +1191,7 @@ function buildExportSVG(bbox, pad, ppm, mode){
     const roomFill=(!blueprint&&el.__exportPatternId)?`url(#${el.__exportPatternId})`:(el.color||room);
     parts.push(`<rect x="${x}" y="${y}" width="${ww}" height="${hh}" fill="${roomFill}" fill-opacity="${el.__exportPatternId?'0.82':'0.42'}"/>`);
     parts.push(`<text x="${x+ww/2}" y="${y+hh/2-4}" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-weight="600" font-size="${Math.max(12,ppm*0.14)}" fill="${ink}">${escapeXML(el.name)}</text>`);
-    parts.push(`<text x="${x+ww/2}" y="${y+hh/2+14}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="${Math.max(10,ppm*0.11)}" fill="${muted}">${(el.w*el.h).toFixed(2).replace('.',',')} m²</text>`);
+    parts.push(`<text x="${x+ww/2}" y="${y+hh/2+14}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="${Math.max(10,ppm*0.11)}" fill="${muted}">${localizedNumber(el.w*el.h)} m²</text>`);
   }
   for (const el of state.elements){
     if (el.type!=='wall') continue;
@@ -922,14 +1239,14 @@ function buildExportSVG(bbox, pad, ppm, mode){
     parts.push(`<text x="${x}" y="${y}" font-family="IBM Plex Sans, sans-serif" font-size="${el.size||16}" font-weight="${el.bold?700:400}" fill="${textColor}" transform="rotate(${el.rotation||0} ${x} ${y})">${escapeXML(el.content)}</text>`);
   }
   const totalArea = state.elements.filter(e=>e.type==='room').reduce((s,r)=>s+r.w*r.h,0);
-  const footer = totalArea>0 ? `Visual Maker · Área total ${totalArea.toFixed(2).replace('.',',')} m²` : `Visual Maker · ${state.elements.filter(e=>e.type==='wall').length} paredes`;
+  const footer = totalArea>0 ? `Visual Maker · ${t('totalArea',{area:localizedNumber(totalArea)})}` : `Visual Maker · ${t('wallCount',{count:state.elements.filter(e=>e.type==='wall').length})}`;
   parts.push(`<text x="10" y="${h-10}" font-family="IBM Plex Mono, monospace" font-size="11" fill="${muted}">${escapeXML(footer)}</text>`);
   parts.push('</svg>');
   state.elements.filter(e=>e.type==='room').forEach(r=>{if('__exportPatternId' in r) delete r.__exportPatternId;});
   return parts.join('');
 }
 function exportPNG(mode){
-  if (state.elements.length===0){ alert('Adicione ao menos uma parede antes de exportar.'); return; }
+  if (state.elements.length===0){ alert(t('addWallBeforeExport')); return; }
   const bbox = computeContentBBox();
   const ppm = 100;
   const svgBlob = new Blob([buildExportSVG(bbox,1.1,ppm,mode)], {type:'image/svg+xml;charset=utf-8'});
@@ -946,19 +1263,19 @@ function exportPNG(mode){
     canvas.toBlob((blob)=>{
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      const suffix=mode==='blueprint'?'-blueprint':(mode==='dark'?'-escuro':'-claro');
+      const suffix=mode==='blueprint'?'-blueprint':(mode==='dark'?t('suffixDark'):t('suffixLight'));
       a.download = safeProjectFilename() + suffix + '.png';
       document.body.appendChild(a); a.click(); a.remove();
     });
   };
-  img.onerror = ()=> alert('Não foi possível gerar a imagem.');
+  img.onerror = ()=> alert(t('couldNotGenerateImage'));
   img.src = url;
 }
-function safeProjectFilename(){return (state.projectName||'planta').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\- ]/g,'').trim()||'planta';}
+function safeProjectFilename(){const fallback=t('defaultFilename');return (state.projectName||fallback).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\- ]/g,'').trim()||fallback;}
 function exportSVGFile(mode){
-  if(state.elements.length===0){alert('Adicione ao menos uma parede antes de exportar.');return;}
+  if(state.elements.length===0){alert(t('addWallBeforeExport'));return;}
   const blob=new Blob([buildExportSVG(computeContentBBox(),1.1,100,mode)],{type:'image/svg+xml;charset=utf-8'}),a=document.createElement('a');
-  const suffix=mode==='blueprint'?'-blueprint':(mode==='dark'?'-escuro':'-claro');
+  const suffix=mode==='blueprint'?'-blueprint':(mode==='dark'?t('suffixDark'):t('suffixLight'));
   a.href=URL.createObjectURL(blob);a.download=safeProjectFilename()+suffix+'.svg';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
@@ -968,10 +1285,10 @@ let pendingUnsavedAction='home';
 function openUnsavedDialog(action){
   pendingUnsavedAction=action;
   const isReload=action==='reload';
-  document.getElementById('unsaved-title').textContent=isReload?'Salvar antes de atualizar?':'Salvar antes de sair?';
-  document.getElementById('unsaved-description').textContent=isReload?'Este projeto possui alterações que ainda não foram salvas. Se você atualizar a página agora, elas serão perdidas.':'Este projeto possui alterações que ainda não foram salvas. Se você sair agora, elas serão perdidas.';
-  document.getElementById('unsaved-discard').textContent=isReload?'Atualizar sem salvar':'Sair sem salvar';
-  document.getElementById('unsaved-save').textContent=isReload?'Salvar e atualizar':'Salvar e sair';
+  document.getElementById('unsaved-title').textContent=isReload?t('saveBeforeReload'):t('saveBeforeExit');
+  document.getElementById('unsaved-description').textContent=isReload?t('unsavedReload'):t('unsavedExit');
+  document.getElementById('unsaved-discard').textContent=isReload?t('reloadWithoutSaving'):t('exitWithoutSaving');
+  document.getElementById('unsaved-save').textContent=isReload?t('saveAndReload'):t('saveAndExit');
   unsavedModal.classList.remove('hidden');
   requestAnimationFrame(()=>document.getElementById('unsaved-save').focus());
 }
@@ -1003,6 +1320,16 @@ document.getElementById('export-svg').addEventListener('click',()=>{const mode=d
 document.getElementById('blueprint-toggle').addEventListener('change',e=>{state.blueprintOn=e.target.checked;applyProjectAppearance();markUnsaved();render();});
 document.getElementById('theme-toggle').addEventListener('click',()=>setDarkMode(!document.body.classList.contains('dark-mode'),true));
 document.getElementById('home-theme-toggle').addEventListener('click',()=>setDarkMode(!document.body.classList.contains('dark-mode'),true));
+const settingsPanel=document.getElementById('settings-panel');
+function openSettings(){settingsPanel.classList.remove('hidden');document.getElementById('language-select').focus();}
+function closeSettings(){settingsPanel.classList.add('hidden');}
+document.getElementById('settings-toggle').addEventListener('click',e=>{e.stopPropagation();settingsPanel.classList.contains('hidden')?openSettings():closeSettings();});
+document.getElementById('home-settings-toggle').addEventListener('click',e=>{e.stopPropagation();settingsPanel.classList.contains('hidden')?openSettings():closeSettings();});
+document.getElementById('settings-close').addEventListener('click',closeSettings);
+document.getElementById('language-select').addEventListener('change',e=>setLanguage(e.target.value,true));
+settingsPanel.addEventListener('mousedown',e=>e.stopPropagation());
+document.addEventListener('mousedown',()=>closeSettings());
+
 document.querySelectorAll('.palette-option').forEach(btn=>btn.addEventListener('click',()=>{state.palette=btn.dataset.palette;applyProjectAppearance();markUnsaved();render();if(typeof window.refresh3DView==='function')window.refresh3DView();}));
 document.getElementById('zoom-in').addEventListener('click', ()=>zoomBy(1.2));
 document.getElementById('zoom-out').addEventListener('click', ()=>zoomBy(1/1.2));
@@ -1043,5 +1370,7 @@ document.querySelectorAll('.chip').forEach(chip=>{
 });
 
 /* ===== Início ===== */
+applyStoredLanguage();
+applyStaticTranslations();
 applyStoredTheme();
 renderHomeScreen();

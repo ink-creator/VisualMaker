@@ -17,14 +17,14 @@ function bindEnterBlur(el){ el.addEventListener('keydown', e=>{ if(e.key==='Ente
 function relativeDate(ts){
   const diff = Date.now()-ts;
   const min = Math.floor(diff/60000);
-  if (min<1) return 'agora mesmo';
-  if (min<60) return `há ${min} min`;
+  if (min<1) return t('justNow');
+  if (min<60) return t('minutesAgo',{count:min});
   const hr = Math.floor(min/60);
-  if (hr<24) return `há ${hr} h`;
+  if (hr<24) return t('hoursAgo',{count:hr});
   const day = Math.floor(hr/24);
-  if (day===1) return 'ontem';
-  if (day<7) return `há ${day} dias`;
-  return new Date(ts).toLocaleDateString('pt-BR');
+  if (day===1) return t('yesterday');
+  if (day<7) return t('daysAgo',{count:day});
+  return new Date(ts).toLocaleDateString(window.getCurrentLanguage()==='en'?'en-US':'pt-BR');
 }
 
 /* ===== Medidas reais (m / cm) ===== */
