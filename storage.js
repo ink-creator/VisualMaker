@@ -23,7 +23,10 @@ async function saveProject(showFeedback){
   state.view3d = current3DView;
 
   const payload = JSON.stringify({
+    schemaVersion:3,
     name:state.projectName,
+    activeFloorId:state.activeFloorId||'floor-1',
+    floors:Array.isArray(state.floors)&&state.floors.length?state.floors:[{id:'floor-1',name:null,elevation:0}],
     elements:state.elements,
     gridSpacing:state.gridSpacing,
     gridOn:state.gridOn,
@@ -69,12 +72,15 @@ async function loadProjectData(id){
     const data = JSON.parse(r.value);
     state.projectId = id;
     state.projectName = data.name || t('untitled');
-    state.elements = data.elements || [];
+    state.activeFloorId = data.activeFloorId || 'floor-1';
+    state.floors = Array.isArray(data.floors)&&data.floors.length ? data.floors : [{id:'floor-1',name:null,elevation:0}];
+    state.elements = (data.elements || []).map(el=>el&&el.floorId?el:Object.assign({floorId:state.activeFloorId},el));
     state.gridSpacing = data.gridSpacing || 0.5;
     state.gridOn = data.gridOn!==false;
     state.blueprintOn = !!data.blueprintOn;
     state.palette = data.palette || 'technical';
     state.view3d = data.view3d || null;
+    if(typeof ensureOpeningBindings==='function')ensureOpeningBindings();
     return true;
   } catch(err){
     console.error('Erro ao carregar projeto', err);

@@ -240,6 +240,13 @@ body.blueprint-mode .status-mode span{background:#8ED0FF;box-shadow:0 0 0 3px rg
 .toolbar-actions .view-mode-switch button{min-width:34px;padding:5px 8px;border:0;background:transparent;color:var(--text-secondary);border-radius:5px;font-family:var(--font-mono);font-size:11px;box-shadow:none;}
 .toolbar-actions .view-mode-switch button:hover{border:0;color:var(--accent);}
 .toolbar-actions .view-mode-switch button.active{background:var(--control);color:var(--accent);box-shadow:0 1px 4px rgba(20,35,55,.12);}
+
+.floor-switch{display:flex;align-items:center;gap:3px;padding:2px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);}
+.floor-switch select{height:28px;max-width:128px;min-width:92px;border:0;background:var(--control);color:var(--text);border-radius:5px;padding:0 24px 0 8px;font:600 10.5px var(--font-mono);outline:none;}
+.toolbar-actions .floor-switch button{width:27px;height:27px;min-width:27px;padding:0;justify-content:center;border:0;background:transparent;font-size:14px;}
+.toolbar-actions .floor-switch button:hover:not(:disabled){border:0;background:var(--control);}
+.floor-switch #floor-delete{color:var(--danger);}
+@media (max-width:1050px){.floor-switch select{max-width:92px;min-width:72px}.floor-switch #floor-duplicate{display:none;}}
 #canvas-3d{display:block;width:100%;height:100%;touch-action:none;cursor:grab;background:var(--paper);}
 #canvas-3d.dragging{cursor:grabbing;}
 .viewer3d-help{position:absolute;left:16px;top:16px;z-index:8;display:flex;align-items:center;gap:14px;padding:10px 11px 10px 12px;border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--control) 92%,transparent);box-shadow:0 3px 14px rgba(27,36,48,.10);backdrop-filter:blur(5px);}
@@ -253,7 +260,7 @@ body.view-3d .tool-group,body.view-3d .library-tabs,body.view-3d .asset-grid,bod
 body.view-3d .sidebar .mini-label:first-of-type{opacity:.55;}
 body.view-3d .zoom-bar #zoom-out,body.view-3d .zoom-bar #zoom-in,body.view-3d .zoom-bar #zoom-fit,body.view-3d .zoom-bar #zoom-label{display:none;}
 body.view-3d .status-help{font-size:0;}
-body.view-3d .status-help::after{content:'Clique: selecionar · arraste objeto: mover · botão direito: orbitar · WASD/setas: câmera · Alt: sem snap · H: ocultar frente';font-size:10px;}
+body.view-3d .status-help::after{content:attr(data-three-d-help);font-size:10px;}
 body.dark-mode .viewer3d-help{background:color-mix(in srgb,var(--control) 92%,transparent);}
 @media (max-width:900px){.viewer3d-help span{display:none}.viewer3d-help{gap:8px}.toolbar-actions .view-mode-switch button{min-width:30px;padding-inline:6px;}}
 
@@ -263,8 +270,9 @@ body.dark-mode .viewer3d-help{background:color-mix(in srgb,var(--control) 92%,tr
 
 
 /* ===== EDIÇÃO DIRETA NO 3D ===== */
-#canvas-3d.object-hover{cursor:pointer;}
-#canvas-3d.object-drag{cursor:move;}
+#canvas-3d.object-hover,#canvas-3d.opening-hover{cursor:pointer;}
+#canvas-3d.object-drag,#canvas-3d.opening-drag{cursor:move;}
+#canvas-3d.opening-resize{cursor:col-resize;}
 #canvas-3d.gizmo-drag{cursor:ns-resize;}
 #canvas-3d.rotate-drag{cursor:crosshair;}
 .viewer3d-selection{margin-top:2px;color:var(--accent)!important;font-weight:600;max-width:410px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}

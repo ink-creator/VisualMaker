@@ -29,9 +29,11 @@
   let target={x:0,y:0,z:1};
   let drag=null;
   let interaction=null;
-  let hoverObjectId=null;
+  let hoverElementId=null;
   let hideFrontWalls=false;
   let cameraInitialized=false;
+
+  function active3DElements(){return typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements;}
 
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const rad=d=>d*Math.PI/180;
@@ -135,10 +137,10 @@
   }
 
   function contentBBox(){
-    if(!state.elements.length) return {minX:-4,maxX:4,minY:-4,maxY:4};
+    if(!active3DElements().length) return {minX:-4,maxX:4,minY:-4,maxY:4};
     let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
     const include=(x,y)=>{if(Number.isFinite(x)&&Number.isFinite(y)){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}};
-    for(const e of state.elements){
+    for(const e of active3DElements()){
       if('x1' in e){include(e.x1,e.y1);include(e.x2,e.y2);}
       else if(e.type==='room'){include(e.x,e.y);include(e.x+e.w,e.y+e.h);}
       else if('x' in e){const hw=(e.w||e.width||.4)/2,hh=(e.h||e.width||.4)/2;include(e.x-hw,e.y-hh);include(e.x+hw,e.y+hh);}
@@ -229,15 +231,25 @@
   }
 
 
-  function selectedObject(){
+  function selectedEditableElement(){
     const el=selectedId?getElement(selectedId):null;
+    return el&&['object','door','window'].includes(el.type)&&(typeof elementBelongsToFloor!=='function'||elementBelongsToFloor(el,state.activeFloorId))?el:null;
+  }
+  function selectedObject(){
+    const el=selectedEditableElement();
     return el&&el.type==='object'?el:null;
   }
   function updateSelectionInfo(){
     if(!selectionInfo)return;
-    const el=selectedObject();
+    const el=selectedEditableElement();
     if(!el){
       selectionInfo.textContent=t('noObjectSelected');
+      return;
+    }
+    if(el.type==='door'||el.type==='window'){
+      const label=el.type==='door'?t('door'):t('window');
+      const attached=el.wallId?` · ${t('wallAttached')}`:'';
+      selectionInfo.textContent=`${label} · X ${el.x.toFixed(2)} m · Y ${el.y.toFixed(2)} m · ${formatMeters(el.width||0)}${attached}`;
       return;
     }
     const z=objectElevation(el);
@@ -304,6 +316,12 @@
     const pad=Math.max(.035,Math.min(.12,Math.min(e.w||1,e.h||1)*.08));
     return rayLocalBoxDistance(ray,e.x,e.y,z,(e.w||1)+pad,(e.h||1)+pad,h,rad(e.rotation||0));
   }
+  function openingRayDistance(ray,e){
+    const h=e.height||(e.type==='door'?2.1:1.2);
+    const z0=e.type==='door'?0:(e.sillHeight==null?.9:e.sillHeight);
+    const depth=Math.max(.08,(e.wallThickness||.15)*.72);
+    return rayLocalBoxDistance(ray,e.x,e.y,z0,e.width||.8,depth,h,rad(e.angle||0));
+  }
   function wallRayDistance(ray,wall){
     const dx=wall.x2-wall.x1,dy=wall.y2-wall.y1,L=Math.hypot(dx,dy);
     if(L<.02)return Infinity;
@@ -311,18 +329,19 @@
     if(shouldHideFrontWall(wall,eye))return Infinity;
     return rayLocalBoxDistance(ray,(wall.x1+wall.x2)/2,(wall.y1+wall.y2)/2,0,L,wall.thickness||.15,wall.height||2.7,Math.atan2(dy,dx));
   }
-  function pickObjectAt(clientX,clientY){
+  function pickEditableAt(clientX,clientY){
     const ray=canvasRay(clientX,clientY);if(!ray)return null;
     let wallT=Infinity;
-    for(const w of state.elements){
+    for(const w of active3DElements()){
       if(w.type!=='wall')continue;
       wallT=Math.min(wallT,wallRayDistance(ray,w));
     }
     let best=null,bestT=Infinity;
-    for(const e of state.elements){
-      if(e.type!=='object')continue;
-      const t=objectRayDistance(ray,e);
-      if(t<bestT&&t<=wallT+.025){best=e;bestT=t;}
+    for(const e of active3DElements()){
+      if(e.type!=='object'&&e.type!=='door'&&e.type!=='window')continue;
+      const t=e.type==='object'?objectRayDistance(ray,e):openingRayDistance(ray,e);
+      const wallAllowance=e.type==='object'?.025:.24;
+      if(t<bestT&&t<=wallT+wallAllowance){best=e;bestT=t;}
     }
     return best;
   }
@@ -372,6 +391,18 @@
       prev=p;
     }
     if(best<=10)return 'rotation';
+    return null;
+  }
+
+  function openingResizeHandleAt(clientX,clientY,e){
+    if(!e||(e.type!=='door'&&e.type!=='window'))return null;
+    const h=e.height||(e.type==='door'?2.1:1.2),z0=e.type==='door'?0:(e.sillHeight==null?.9:e.sillHeight),cz=z0+h*.52;
+    const a=rad(e.angle||0),ux=Math.cos(a),uy=Math.sin(a),half=(e.width||.8)/2;
+    const points={
+      left:projectWorld({x:e.x-ux*half,y:e.y-uy*half,z:cz}),
+      right:projectWorld({x:e.x+ux*half,y:e.y+uy*half,z:cz})
+    };
+    for(const side of ['left','right']){const p=points[side];if(p&&Math.hypot(clientX-p.x,clientY-p.y)<=13)return side;}
     return null;
   }
 
@@ -483,14 +514,35 @@
     addVertex(mesh.overlayLines,a,color);addVertex(mesh.overlayLines,b,color);
   }
   function addSelectionOverlay(mesh){
-    const e=selectedObject();if(!e)return;
+    const e=selectedEditableElement();if(!e)return;
+    const accent=[.18,.58,1,1],xColor=[.92,.32,.30,1],yColor=[.28,.78,.43,1],zColor=[.28,.58,1,1],ring=[1,.67,.22,1];
+
+    if(e.type==='door'||e.type==='window'){
+      const h=e.height||(e.type==='door'?2.1:1.2);
+      const z0=e.type==='door'?0:(e.sillHeight==null?.9:e.sillHeight);
+      const z1=z0+h,w=(e.width||.8)+.08,d=Math.max(.12,(e.wallThickness||.15)+.08);
+      const pts=[localXY(e,-w/2,-d/2),localXY(e,w/2,-d/2),localXY(e,w/2,d/2),localXY(e,-w/2,d/2)];
+      const low=pts.map(p=>({x:p.x,y:p.y,z:z0-.025})),high=pts.map(p=>({x:p.x,y:p.y,z:z1+.025}));
+      for(let i=0;i<4;i++){
+        addOverlayLine(mesh,low[i],low[(i+1)%4],accent);
+        addOverlayLine(mesh,high[i],high[(i+1)%4],accent);
+        addOverlayLine(mesh,low[i],high[i],accent);
+      }
+      const axisLen=(e.width||.8)/2,a=rad(e.angle||0),ux=Math.cos(a),uy=Math.sin(a),cz=z0+h*.52;
+      const left={x:e.x-ux*axisLen,y:e.y-uy*axisLen,z:cz},right={x:e.x+ux*axisLen,y:e.y+uy*axisLen,z:cz};
+      addOverlayLine(mesh,left,right,ring);
+      const tick=.12;
+      addOverlayLine(mesh,{x:left.x-uy*tick,y:left.y+ux*tick,z:cz},{x:left.x+uy*tick,y:left.y-ux*tick,z:cz},ring);
+      addOverlayLine(mesh,{x:right.x-uy*tick,y:right.y+ux*tick,z:cz},{x:right.x+uy*tick,y:right.y-ux*tick,z:cz},ring);
+      return;
+    }
+
     const g=gizmoGeometry(e);
     const z0=g.z0-.025,z1=g.top+.025,w=(e.w||1)+.07,d=(e.h||1)+.07;
     const pts=[
       localXY(e,-w/2,-d/2),localXY(e,w/2,-d/2),localXY(e,w/2,d/2),localXY(e,-w/2,d/2)
     ];
     const low=pts.map(p=>({x:p.x,y:p.y,z:z0})),high=pts.map(p=>({x:p.x,y:p.y,z:z1}));
-    const accent=[.18,.58,1,1],xColor=[.92,.32,.30,1],yColor=[.28,.78,.43,1],zColor=[.28,.58,1,1],ring=[1,.67,.22,1];
     for(let i=0;i<4;i++){
       addOverlayLine(mesh,low[i],low[(i+1)%4],accent);
       addOverlayLine(mesh,high[i],high[(i+1)%4],accent);
@@ -520,7 +572,7 @@
     if(L<.02)return [];
     const ux=dx/L,uy=dy/L;
     const out=[];
-    for(const e of state.elements){
+    for(const e of active3DElements()){
       const isGate=e.type==='object'&&['slidingGate','doubleGate','pedestrianGate'].includes(e.kind);
       if(e.type!=='door'&&e.type!=='window'&&!isGate)continue;
       const rx=e.x-wall.x1,ry=e.y-wall.y1;
@@ -589,7 +641,7 @@
   function openingHiddenByFrontWall(e,eye){
     if(!hideFrontWalls)return false;
     let best=null,bestDist=Infinity;
-    for(const wall of state.elements.filter(x=>x.type==='wall')){
+    for(const wall of active3DElements().filter(x=>x.type==='wall')){
       const dx=wall.x2-wall.x1,dy=wall.y2-wall.y1,L2=dx*dx+dy*dy;if(L2<.0001)continue;
       const t=clamp(((e.x-wall.x1)*dx+(e.y-wall.y1)*dy)/L2,0,1);
       const px=wall.x1+t*dx,py=wall.y1+t*dy,dist=Math.hypot(e.x-px,e.y-py);
@@ -598,28 +650,49 @@
     return !!(best&&bestDist<Math.max(.34,(best.thickness||.15)*2)&&shouldHideFrontWall(best,eye));
   }
   function addOpeningPanels(mesh,eye,includeHidden=false){
-    for(const e of state.elements){
+    for(const e of active3DElements()){
       if(e.type!=='door'&&e.type!=='window')continue;
       if(!includeHidden&&openingHiddenByFrontWall(e,eye))continue;
       const h=e.height||(e.type==='door'?2.1:1.2),z0=e.type==='door'?0:(e.sillHeight==null?.9:e.sillHeight);
       const t=Math.max(.035,(e.wallThickness||.15)*.30),w=e.width||.8;
       if(e.type==='door'){
         const base=e.color||'#A56B43';
-        localBox(mesh,e,0,0,z0+h/2,w,t,h,base,1);
-        const inset=vary(base,.82),panelW=w*.72,panelH=h*.29;
-        localBox(mesh,e,0,-t*.58,z0+h*.28,panelW,.012,panelH,inset,1);
-        localBox(mesh,e,0,-t*.58,z0+h*.68,panelW,.012,panelH,inset,1);
-        const knob=localXY(e,w*.31,-t*.72);
-        addBox(mesh,knob.x,knob.y,z0+h*.50,.06,.035,.06,'#D1B36A',rad(e.angle||0),1);
+        if((e.doorStyle||'swing')==='sliding'){
+          const panelW=w*.57;
+          localBox(mesh,e,-w*.20,-t*.12,z0+h/2,panelW,t*.72,h,base,1);
+          localBox(mesh,e,w*.20,t*.12,z0+h/2,panelW,t*.72,h,vary(base,.92),1);
+          localBox(mesh,e,0,-t*.65,z0+h+.035,w*1.03,.045,.07,vary(base,.65),1);
+          const knob=localXY(e,w*.04,-t*.62);addBox(mesh,knob.x,knob.y,z0+h*.5,.05,.03,.055,'#D1B36A',rad(e.angle||0),1);
+        }else{
+          const hingeRight=e.hingeSide==='right',swing=Number(e.swingSide)===-1?-1:1;
+          const phi=18*swing*(hingeRight?-1:1),pr=rad(phi),hingeX=hingeRight?w/2:-w/2;
+          const vx=-hingeX,centerX=hingeX+vx*Math.cos(pr),centerY=vx*Math.sin(pr);
+          localBox(mesh,e,centerX,centerY,z0+h/2,w,t,h,base,1,phi);
+          const knobClosedX=(hingeRight?-1:1)*w*.31,knobVx=knobClosedX-hingeX,knobVy=-t*.72;
+          const knobLocal={x:hingeX+knobVx*Math.cos(pr)-knobVy*Math.sin(pr),y:knobVx*Math.sin(pr)+knobVy*Math.cos(pr)};
+          const knob=localXY(e,knobLocal.x,knobLocal.y);addBox(mesh,knob.x,knob.y,z0+h*.50,.06,.035,.06,'#D1B36A',rad((e.angle||0)+phi),1);
+        }
       } else {
-        const glass=e.color||'#9CC9DF',frame='#E9EFF3';
+        const glass=e.color||'#9CC9DF',frame='#E9EFF3',style=e.windowStyle||'sliding';
         localBox(mesh,e,0,0,z0+h/2,w,t*.52,h,glass,.34);
         const fw=Math.max(.045,Math.min(.085,w*.07)),fh=Math.max(.045,Math.min(.085,h*.08));
         localBox(mesh,e,-w/2+fw/2,0,z0+h/2,fw,t,h,frame,1);
         localBox(mesh,e,w/2-fw/2,0,z0+h/2,fw,t,h,frame,1);
         localBox(mesh,e,0,0,z0+fh/2,w,t,fh,frame,1);
         localBox(mesh,e,0,0,z0+h-fh/2,w,t,fh,frame,1);
-        localBox(mesh,e,0,0,z0+h/2,w,t*.92,fw*.65,frame,1);
+        if(style==='sliding'){
+          localBox(mesh,e,0,0,z0+h/2,fw,t*.92,h*.92,frame,1);
+          localBox(mesh,e,-w*.23,-t*.34,z0+h*.52,w*.44,.025,fw*.55,frame,1);
+          localBox(mesh,e,w*.23,t*.34,z0+h*.48,w*.44,.025,fw*.55,frame,1);
+        }else if(style==='fixed'){
+          localBox(mesh,e,0,0,z0+h/2,fw*.55,t*.9,h*.90,frame,.8);
+        }else if(style==='awning'){
+          const side=Number(e.windowSide)===-1?-1:1;
+          localBox(mesh,e,0,side*t*.78,z0+h*.56,w*.86,.035,h*.72,frame,1);
+          localBox(mesh,e,0,side*t*.86,z0+h*.56,w*.78,.018,h*.62,glass,.30);
+          localBox(mesh,e,-w*.38,side*t*.48,z0+h*.18,.035,t*.72,h*.34,frame,1);
+          localBox(mesh,e,w*.38,side*t*.48,z0+h*.18,.035,t*.72,h*.34,frame,1);
+        }
       }
     }
   }
@@ -664,7 +737,7 @@
     }
   }
   function addRooms(mesh){
-    for(const r of state.elements.filter(e=>e.type==='room')){
+    for(const r of active3DElements().filter(e=>e.type==='room')){
       const base=materialBase(r);
       addBox(mesh,r.x+r.w/2,r.y+r.h/2,-.035,r.w,r.h,.07,base,0,1);
       addRoomMaterialDetails(mesh,r,base);
@@ -849,7 +922,7 @@
   }
 
   function addObjects(mesh){
-    for(const e of state.elements.filter(e=>e.type==='object')){
+    for(const e of active3DElements().filter(e=>e.type==='object')){
       const c=e.color||objectDefaultColor(e.kind);
       if(e.kind==='sofa')modelSofa(mesh,e,c);
       else if(e.kind==='bed')modelBed(mesh,e,c);
@@ -881,7 +954,7 @@
     const mesh={opaque:[],transparent:[],lines:[],overlayLines:[]};
     addGrid(mesh.lines);
     addRooms(mesh);
-    for(const wall of state.elements.filter(e=>e.type==='wall'))if(!shouldHideFrontWall(wall,eye))addWallGeometry(mesh,wall);
+    for(const wall of active3DElements().filter(e=>e.type==='wall'))if(!shouldHideFrontWall(wall,eye))addWallGeometry(mesh,wall);
     addOpeningPanels(mesh,eye);
     addObjects(mesh);
     addSelectionOverlay(mesh);
@@ -896,7 +969,7 @@
   function buildExportScene(){
     const mesh={opaque:[],transparent:[],lines:[],overlayLines:[]};
     addRooms(mesh);
-    for(const wall of state.elements.filter(e=>e.type==='wall'))addWallGeometry(mesh,wall);
+    for(const wall of active3DElements().filter(e=>e.type==='wall'))addWallGeometry(mesh,wall);
     addOpeningPanels(mesh,cameraEye(),true);
     addObjects(mesh);
     return mesh;
@@ -1111,7 +1184,7 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
   }
 
   function exportStandalone3DHTML(){
-    const hasGeometry=state.elements.some(e=>['wall','room','door','window','object'].includes(e.type));
+    const hasGeometry=active3DElements().some(e=>['wall','room','door','window','object'].includes(e.type));
     if(!hasGeometry){alert(t('addElements3DHTML'));return;}
     const mesh=buildExportScene();
     if(!mesh.opaque.length&&!mesh.transparent.length){alert(t('couldNotGenerate3DHTML'));return;}
@@ -1120,7 +1193,7 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
   }
 
   function export3DModel(){
-    const hasGeometry=state.elements.some(e=>['wall','room','door','window','object'].includes(e.type));
+    const hasGeometry=active3DElements().some(e=>['wall','room','door','window','object'].includes(e.type));
     if(!hasGeometry){alert(t('addElements3D'));return;}
     const base=exportBaseName(),objFile=`${base}-3d.obj`,mtlFile=`${base}-3d.mtl`;
     const mesh=buildExportScene();
@@ -1219,7 +1292,7 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
     btn2d.setAttribute('aria-pressed',String(!is3d));btn3d.setAttribute('aria-pressed',String(is3d));
     const status=document.getElementById('status-mode');
     if(status&&status.lastChild)status.lastChild.textContent=is3d?` ${t('view3d')}`:(state.blueprintOn?` ${t('blueprintMode')}`:` ${t('normalEdit')}`);
-    const empty=document.getElementById('empty-hint');if(empty)empty.classList.toggle('hidden',is3d||state.elements.length!==0);
+    const empty=document.getElementById('empty-hint');if(empty)empty.classList.toggle('hidden',is3d||active3DElements().length!==0);
     if(is3d){
       activateTool('select');
       if(!cameraInitialized)resetCamera(false);
@@ -1234,8 +1307,8 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
   btn3d.addEventListener('click',()=>setMode('3d'));
   resetBtn.addEventListener('click',()=>resetCamera(true));
   if(hideFrontBtn)hideFrontBtn.addEventListener('click',()=>{hideFrontWalls=!hideFrontWalls;updateHideFrontButton();draw();markViewChanged();});
-  function select3DObject(el){
-    selectedId=el&&el.type==='object'?el.id:null;
+  function select3DElement(el){
+    if(typeof setSingleSelection==='function')setSingleSelection(el&&['object','door','window'].includes(el.type)?el.id:null);else selectedId=el&&['object','door','window'].includes(el.type)?el.id:null;
     updatePropertiesPanel();
     updateSelectionInfo();
     draw();
@@ -1246,9 +1319,9 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
   }
   function applyMoveSnap(el,ignoreSnap){
     if(ignoreSnap)return;
-    // Para móveis, uma malha de no máximo 10 cm dá precisão sem ficar
-    // "grudando" demais. Se a grade do projeto for mais fina, respeita ela.
-    if(state.gridOn){
+    if(typeof smartSnapObjectPosition==='function'){
+      const snapped=smartSnapObjectPosition(el,el.x,el.y,false);el.x=snapped.x;el.y=snapped.y;
+    }else if(state.gridOn){
       const grid=Math.max(.01,Math.min(.10,state.gridSpacing||.10));
       el.x=Math.round(el.x/grid)*grid;
       el.y=Math.round(el.y/grid)*grid;
@@ -1257,31 +1330,60 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
     if(typeof snapObjectIntoNearbyCorner==='function')snapObjectIntoNearbyCorner(el,threshold);
     else if(typeof snapObjectToNearestWall==='function')snapObjectToNearestWall(el,threshold,false);
   }
+  function openingWallFor(el){
+    const wall=el&&el.wallId?getElement(el.wallId):null;
+    if(wall&&wall.type==='wall')return wall;
+    if(el&&typeof bindOpeningToNearestWall==='function'){
+      const hit=bindOpeningToNearestWall(el,.65);if(hit)return hit.wall;
+    }
+    return null;
+  }
+  function moveOpeningOnWall(el,worldX,worldY){
+    if(!el||(el.type!=='door'&&el.type!=='window'))return false;
+    let hit=typeof findNearestWall==='function'?findNearestWall(worldX,worldY,.55,el.width):null;
+    if(hit&&typeof attachOpeningToWall==='function')return attachOpeningToWall(el,hit,hit.t);
+    const wall=openingWallFor(el);
+    if(!wall||typeof projectPointToWall!=='function'||typeof attachOpeningToWall!=='function')return false;
+    const projected=projectPointToWall(wall,worldX,worldY,el.width);
+    return !!(projected&&attachOpeningToWall(el,wall,projected.t));
+  }
   function pointerInteractionChanged(i){
     if(!i||!i.original)return false;
     const el=getElement(i.id);if(!el)return false;
+    if(el.type==='door'||el.type==='window'){
+      return Math.abs((el.x||0)-i.original.x)>.001||
+        Math.abs((el.y||0)-i.original.y)>.001||
+        Math.abs((el.angle||0)-i.original.angle)>.05||
+        Math.abs((el.width||0)-(i.original.width||0))>.001||
+        String(el.wallId||'')!==String(i.original.wallId||'')||
+        Math.abs((Number(el.wallT)||0)-(Number(i.original.wallT)||0))>.0005;
+    }
     return Math.abs((el.x||0)-i.original.x)>.001||
       Math.abs((el.y||0)-i.original.y)>.001||
       Math.abs((el.elevation||0)-i.original.elevation)>.001||
       Math.abs((el.rotation||0)-i.original.rotation)>.05;
   }
   function clearPointerClasses(){
-    canvas.classList.remove('dragging','object-drag','gizmo-drag','rotate-drag','object-hover');
+    canvas.classList.remove('dragging','object-drag','opening-drag','opening-resize','gizmo-drag','rotate-drag','object-hover','opening-hover');
   }
   function updateHoverCursor(e){
     if(interaction)return;
-    const selected=selectedObject();
+    const selected=selectedObject(),editable=selectedEditableElement();
     const handle=selected?gizmoHitAt(e.clientX,e.clientY,selected):null;
+    const openingHandle=editable&&(editable.type==='door'||editable.type==='window')?openingResizeHandleAt(e.clientX,e.clientY,editable):null;
     let hit=null;
-    if(!handle)hit=pickObjectAt(e.clientX,e.clientY);
-    hoverObjectId=hit?hit.id:null;
+    if(!handle&&!openingHandle)hit=pickEditableAt(e.clientX,e.clientY);
+    hoverElementId=hit?hit.id:null;
     canvas.classList.toggle('gizmo-drag',handle==='elevation');
     canvas.classList.toggle('rotate-drag',handle==='rotation');
-    canvas.classList.toggle('object-hover',!!hit&&!handle);
+    canvas.classList.toggle('opening-resize',!!openingHandle);
+    canvas.classList.toggle('object-hover',!!hit&&hit.type==='object'&&!handle);
+    canvas.classList.toggle('opening-hover',!!hit&&(hit.type==='door'||hit.type==='window')&&!handle);
   }
 
+
   canvas.addEventListener('contextmenu',e=>e.preventDefault());
-  canvas.addEventListener('dblclick',e=>{if(!pickObjectAt(e.clientX,e.clientY))resetCamera(true);});
+  canvas.addEventListener('dblclick',e=>{if(!pickEditableAt(e.clientX,e.clientY))resetCamera(true);});
   canvas.addEventListener('pointerdown',e=>{
     if(mode!=='3d')return;
     if(e.button!==0&&e.button!==1&&e.button!==2)return;
@@ -1291,8 +1393,13 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
     // Botão direito/meio sempre orbita, inclusive quando o cursor está sobre um móvel.
     if(e.button===1||e.button===2){startOrbit(e);return;}
 
-    const current=selectedObject();
-    const handle=current?gizmoHitAt(e.clientX,e.clientY,current):null;
+    const current=selectedEditableElement();
+    const openingHandle=current&&(current.type==='door'||current.type==='window')?openingResizeHandleAt(e.clientX,e.clientY,current):null;
+    if(current&&openingHandle){
+      interaction={type:'resize-opening',id:current.id,edge:openingHandle,original:{x:current.x,y:current.y,angle:current.angle||0,width:current.width||0,wallId:current.wallId||null,wallT:Number(current.wallT)||0}};
+      canvas.classList.add('opening-resize');return;
+    }
+    const handle=current&&current.type==='object'?gizmoHitAt(e.clientX,e.clientY,current):null;
     if(current&&handle==='elevation'){
       interaction={
         type:'elevation',id:current.id,startY:e.clientY,startValue:objectElevation(current),
@@ -1312,9 +1419,19 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
       canvas.classList.add('rotate-drag');return;
     }
 
-    const hit=pickObjectAt(e.clientX,e.clientY);
+    const hit=pickEditableAt(e.clientX,e.clientY);
     if(hit){
-      if(selectedId!==hit.id)select3DObject(hit);
+      if(selectedId!==hit.id)select3DElement(hit);
+      if(hit.type==='door'||hit.type==='window'){
+        openingWallFor(hit);
+        const p=rayPlaneZ(canvasRay(e.clientX,e.clientY),0);
+        interaction={
+          type:'move-opening',id:hit.id,planeZ:0,
+          offset:p?{x:hit.x-p.x,y:hit.y-p.y}:{x:0,y:0},
+          original:{x:hit.x,y:hit.y,angle:hit.angle||0,width:hit.width||0,wallId:hit.wallId||null,wallT:Number(hit.wallT)||0}
+        };
+        canvas.classList.add('opening-drag');return;
+      }
       const planeZ=objectElevation(hit);
       const p=rayPlaneZ(canvasRay(e.clientX,e.clientY),planeZ);
       interaction={
@@ -1342,8 +1459,21 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
     }
 
     const el=getElement(interaction.id);
-    if(!el||el.type!=='object')return;
+    if(!el)return;
 
+    if(interaction.type==='resize-opening'){
+      const p=rayPlaneZ(canvasRay(e.clientX,e.clientY),0);if(!p)return;
+      if(typeof resizeOpeningOnWall==='function')resizeOpeningOnWall(el,interaction.edge,p.x,p.y);
+      draw();return;
+    }
+
+    if(interaction.type==='move-opening'){
+      const p=rayPlaneZ(canvasRay(e.clientX,e.clientY),0);if(!p)return;
+      moveOpeningOnWall(el,p.x+interaction.offset.x,p.y+interaction.offset.y);
+      draw();return;
+    }
+
+    if(el.type!=='object')return;
     if(interaction.type==='move-object'){
       const p=rayPlaneZ(canvasRay(e.clientX,e.clientY),interaction.planeZ);
       if(!p)return;
@@ -1398,7 +1528,7 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
   };
   canvas.addEventListener('pointerup',endPointer);
   canvas.addEventListener('pointercancel',endPointer);
-  canvas.addEventListener('pointerleave',e=>{if(!interaction){canvas.classList.remove('object-hover','gizmo-drag','rotate-drag');hoverObjectId=null;}});
+  canvas.addEventListener('pointerleave',e=>{if(!interaction){canvas.classList.remove('object-hover','opening-hover','gizmo-drag','rotate-drag');hoverElementId=null;}});
   canvas.addEventListener('wheel',e=>{e.preventDefault();distance=clamp(distance*(e.deltaY>0?1.09:.92),2.8,180);cameraInitialized=true;draw();markViewChanged();},{passive:false});
   window.addEventListener('keydown',e=>{
     if(mode!=='3d')return;
@@ -1451,6 +1581,7 @@ window.addEventListener('resize',draw);document.getElementById('reset').addEvent
     if(status&&status.lastChild)status.lastChild.textContent=mode==='3d'?` ${t('view3d')}`:(state.blueprintOn?` ${t('blueprintMode')}`:` ${t('normalEdit')}`);
   };
   window.refresh3DView=()=>{if(mode==='3d')draw();};
+  window.onActiveFloorChanged=()=>{cameraInitialized=false;if(mode==='3d')resetCamera(false);updateSelectionInfo();};
   window.export3DModel=export3DModel;
   window.exportStandalone3DHTML=exportStandalone3DHTML;
   window.setEditorViewMode=setMode;

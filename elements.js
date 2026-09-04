@@ -9,40 +9,42 @@
    Isso permite mover/duplicar qualquer elemento genericamente, sem
    precisar tratar cada tipo separadamente. */
 
+function activeFloorId(){ return (state&&state.activeFloorId)||'floor-1'; }
+
 function addWall(x1,y1,x2,y2,thickness){
   thickness = thickness || 0.15;
   if (Math.hypot(x2-x1,y2-y1) < 0.02) return null;
-  const el = {id:genId(), type:'wall', x1,y1,x2,y2, thickness, height:2.7, color:'#F0EEE9'};
+  const el = {id:genId(), floorId:activeFloorId(), type:'wall', x1,y1,x2,y2, thickness, height:2.7, color:'#F0EEE9'};
   state.elements.push(el);
   return el;
 }
 function addText(x,y,content){
-  const el = {id:genId(), type:'text', x, y, content, size:16, bold:false, rotation:0, color:'#1B2430'};
+  const el = {id:genId(), floorId:activeFloorId(), type:'text', x, y, content, size:16, bold:false, rotation:0, color:'#1B2430'};
   state.elements.push(el);
   return el;
 }
-function addDoor(x,y,angle,wallThickness){
-  const el = {id:genId(), type:'door', x, y, width:0.8, height:2.1, angle:angle||0, wallThickness:wallThickness||0.15, color:'#A56B43'};
+function addDoor(x,y,angle,wallThickness,wallId,wallT){
+  const el = {id:genId(), floorId:activeFloorId(), type:'door', x, y, width:0.8, height:2.1, angle:angle||0, wallThickness:wallThickness||0.15, color:'#A56B43', wallId:wallId||null, wallT:Number.isFinite(wallT)?wallT:null, doorStyle:'swing', hingeSide:'left', swingSide:1};
   state.elements.push(el);
   return el;
 }
-function addWindow(x,y,angle,wallThickness){
-  const el = {id:genId(), type:'window', x, y, width:1.2, height:1.2, sillHeight:0.9, angle:angle||0, wallThickness:wallThickness||0.15, color:'#9CC9DF'};
+function addWindow(x,y,angle,wallThickness,wallId,wallT){
+  const el = {id:genId(), floorId:activeFloorId(), type:'window', x, y, width:1.2, height:1.2, sillHeight:0.9, angle:angle||0, wallThickness:wallThickness||0.15, color:'#9CC9DF', wallId:wallId||null, wallT:Number.isFinite(wallT)?wallT:null, windowStyle:'sliding', windowSide:1};
   state.elements.push(el);
   return el;
 }
 function addRoom(x,y,w,h,name){
-  const el = {id:genId(), type:'room', x, y, w, h, name: name||'Cômodo', material:'solid'};
+  const el = {id:genId(), floorId:activeFloorId(), type:'room', x, y, w, h, name: name||'Cômodo', material:'solid'};
   state.elements.push(el);
   return el;
 }
 function addCota(x1,y1,x2,y2,offset){
-  const el = {id:genId(), type:'cota', x1,y1,x2,y2, offset: offset==null?0.3:offset};
+  const el = {id:genId(), floorId:activeFloorId(), type:'cota', x1,y1,x2,y2, offset: offset==null?0.3:offset};
   state.elements.push(el);
   return el;
 }
 function addObject(x,y,kind,label,category,w,h){
-  const el = {id:genId(), type:'object', x, y, kind, label, category, w:w||1, h:h||1, rotation:0, color:null, elevation:0};
+  const el = {id:genId(), floorId:activeFloorId(), type:'object', x, y, kind, label, category, w:w||1, h:h||1, rotation:0, color:null, elevation:0};
   state.elements.push(el);
   return el;
 }
@@ -59,9 +61,10 @@ function textBoxMetrics(el){
 /* Caixa envolvente (em metros) de todos os elementos — usada para
    centralizar a vista, exportar PNG e posicionar o eixo de espelho. */
 function computeContentBBox(){
-  if (state.elements.length===0) return {minX:0,minY:0,maxX:5,maxY:5};
+  const elements=typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements;
+  if (elements.length===0) return {minX:0,minY:0,maxX:5,maxY:5};
   let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-  for (const el of state.elements){
+  for (const el of elements){
     if ('x1' in el){
       minX=Math.min(minX,el.x1,el.x2); maxX=Math.max(maxX,el.x1,el.x2);
       minY=Math.min(minY,el.y1,el.y2); maxY=Math.max(maxY,el.y1,el.y2);
@@ -92,19 +95,35 @@ function duplicateElement(id){
   const el = getElement(id); if (!el) return;
   const copy = JSON.parse(JSON.stringify(el)); copy.id = genId();
   offsetCopy(copy);
+  if(copy.type==='door'||copy.type==='window'){ copy.wallId=null; copy.wallT=null; if(typeof bindOpeningToNearestWall==='function')bindOpeningToNearestWall(copy,.65); }
   state.elements.push(copy); selectedId = copy.id;
   pushHistory(); render(); updatePropertiesPanel();
 }
 function deleteElement(id){
-  state.elements = state.elements.filter(e=>e.id!==id);
-  if (selectedId===id) selectedId=null;
+  const target=getElement(id);
+  if(target&&target.type==='wall'){
+    state.elements = state.elements.filter(e=>e.id!==id && !((e.type==='door'||e.type==='window')&&e.wallId===id));
+  }else{
+    state.elements = state.elements.filter(e=>e.id!==id);
+  }
+  if (selectedId===id || !getElement(selectedId)) selectedId=null;
   pushHistory(); render(); updatePropertiesPanel();
 }
 function pasteClipboard(){
   if (!clipboard) return;
-  const copy = JSON.parse(JSON.stringify(clipboard)); copy.id = genId();
+  if(clipboard.multi&&Array.isArray(clipboard.elements)){
+    const source=JSON.parse(JSON.stringify(clipboard.elements));
+    const idMap=new Map(source.map(el=>[el.id,genId()]));
+    const copies=source.map(el=>{const copy=el;copy.id=idMap.get(el.id);copy.floorId=activeFloorId();offsetCopy(copy);if((copy.type==='door'||copy.type==='window')&&copy.wallId){copy.wallId=idMap.get(copy.wallId)||null;if(!copy.wallId)copy.wallT=null;}return copy;});
+    state.elements.push(...copies);
+    copies.forEach(copy=>{if((copy.type==='door'||copy.type==='window')&&copy.wallId){const wall=getElement(copy.wallId);if(wall)attachOpeningToWall(copy,wall,copy.wallT);}else if((copy.type==='door'||copy.type==='window')&&typeof bindOpeningToNearestWall==='function')bindOpeningToNearestWall(copy,.65);});
+    if(typeof setSelection==='function')setSelection(copies.map(c=>c.id),copies[copies.length-1]?.id);else selectedId=copies[copies.length-1]?.id||null;
+    pushHistory();render();updatePropertiesPanel();return;
+  }
+  const copy = JSON.parse(JSON.stringify(clipboard)); copy.id = genId();copy.floorId=activeFloorId();
   offsetCopy(copy);
-  state.elements.push(copy); selectedId = copy.id;
+  if(copy.type==='door'||copy.type==='window'){ copy.wallId=null; copy.wallT=null; if(typeof bindOpeningToNearestWall==='function')bindOpeningToNearestWall(copy,.65); }
+  state.elements.push(copy); if(typeof setSingleSelection==='function')setSingleSelection(copy.id);else selectedId = copy.id;
   pushHistory(); render(); updatePropertiesPanel();
 }
 
@@ -117,8 +136,10 @@ function rotateElement(id, deltaDeg){
     const rot = (x,y)=>{ const dx=x-cx,dy=y-cy; return {x:cx+dx*Math.cos(rad)-dy*Math.sin(rad), y:cy+dx*Math.sin(rad)+dy*Math.cos(rad)}; };
     const np1=rot(el.x1,el.y1), np2=rot(el.x2,el.y2);
     el.x1=np1.x; el.y1=np1.y; el.x2=np2.x; el.y2=np2.y;
+    if(el.type==='wall'&&typeof syncOpeningsForWall==='function')syncOpeningsForWall(el.id);
   } else if (el.type==='door' || el.type==='window'){
-    el.angle = ((el.angle||0)+deltaDeg)%360;
+    if(el.wallId&&typeof syncOpeningsForWall==='function')syncOpeningsForWall(el.wallId);
+    else el.angle = ((el.angle||0)+deltaDeg)%360;
   } else if (el.type==='object'){
     el.rotation = ((el.rotation||0)+deltaDeg)%360;
   } else if (el.type==='text'){
@@ -167,7 +188,11 @@ function addMirroredCopiesFor(el){
     const xCopy = mirrorElementData(el,'x',axisX);
     created.push(mirrorElementData(xCopy,'y',axisY));
   }
-  created.forEach(c=>state.elements.push(c));
+  created.forEach(c=>{
+    if(c.type==='door'||c.type==='window'){ c.wallId=null; c.wallT=null; }
+    state.elements.push(c);
+    if((c.type==='door'||c.type==='window')&&typeof bindOpeningToNearestWall==='function')bindOpeningToNearestWall(c,.65);
+  });
   return created;
 }
 function defaultMirrorAxisX(){
