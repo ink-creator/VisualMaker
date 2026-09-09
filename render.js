@@ -67,7 +67,7 @@ function drawMirrorAxes(layer){
 /* ===== Elementos ===== */
 function roomPatternId(el){ return 'room-pattern-'+String(el.id||'x').replace(/[^a-zA-Z0-9_-]/g,''); }
 function buildRoomPatternDefs(){
-  const rooms=(typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements).filter(e=>e.type==='room'&&(e.material||'solid')!=='solid');
+  const rooms=[...getActiveFloorElements(),...floorSurfaceElements()].filter(e=>e.type==='room'&&(e.material||'solid')!=='solid');
   if(!rooms.length) return null;
   const defs=document.createElementNS(svgNS,'defs');
   const dark=document.body.classList.contains('dark-mode');
@@ -99,6 +99,7 @@ function drawRoom(layer, el){
   rect.setAttribute('width', Math.abs(p2.x-p1.x)); rect.setAttribute('height', Math.abs(p2.y-p1.y));
   const textured=(el.material||'solid')!=='solid'&&!state.blueprintOn; rect.setAttribute('fill',textured?`url(#${roomPatternId(el)})`:(el.color||'var(--room-fill)')); rect.setAttribute('fill-opacity',textured?'0.78':'0.42'); rect.setAttribute('stroke','none');
   layer.appendChild(rect);
+  if(el.surfaceOnly)return;
   const cx=(p1.x+p2.x)/2, cy=(p1.y+p2.y)/2;
   const name = document.createElementNS(svgNS,'text');
   name.setAttribute('x',cx); name.setAttribute('y',cy-6); name.setAttribute('text-anchor','middle');
@@ -402,6 +403,18 @@ function renderCanvas(){
   [layerGrid,layerRooms,layerWalls,layerOpenings,layerObjects,layerCotas,layerTexts,layerSelection].forEach(l=>svgEl.appendChild(l));
 
   if (state.gridOn) drawGrid(layerGrid);
+  for(const surface of floorSurfaceElements())drawRoom(layerRooms,surface);
+  if(activeProject().settings.ghostFloors){
+    const ghost=document.createElementNS(svgNS,'g');
+    ghost.setAttribute('opacity','.18');ghost.setAttribute('pointer-events','none');
+    ghost.setAttribute('data-layer','other-floors');
+    for(const f of state.floors.filter(f=>f.id!==state.activeFloorId))for(const el of f.elements){
+      if(el.type==='wall')drawWall(ghost,el);
+      else if(el.type==='room')drawRoom(ghost,{...el,material:'solid'});
+      else if(el.type==='object')drawObject(ghost,el);
+    }
+    svgEl.insertBefore(ghost,layerWalls);
+  }
   const activeElements=typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements;
   for (const el of activeElements){
     if (el.type==='room') drawRoom(layerRooms, el);

@@ -169,6 +169,23 @@ const TRANSLATIONS = {
   }
 };
 
+Object.assign(TRANSLATIONS['pt-BR'], {
+  floorSettings:'Configurações do andar',
+  cancel:'Cancelar',
+  projects:'Projetos',project:'Projeto',projectName:'Nome do projeto',renameProject:'Renomear projeto',duplicateProject:'Duplicar projeto',copy:'cópia',
+  deleteBoardConfirm:'Excluir o projeto "{name}" e todos os seus andares?',baseElevation:'Cota de base',floorHeight:'Altura do andar (m)',slabThickness:'Laje (m)',
+  floorSurface:'Piso do andar',ghostFloors:'Referência dos outros andares',
+  importFile:'Abrir arquivo VisualMaker',exportFile:'Baixar arquivo VisualMaker',invalidFile:'Arquivo VisualMaker inválido ou de uma versão não suportada.',allFloors:'Todos os andares',floorOnly:'Somente andar ativo',surfaceHelp:'O piso usa o retângulo que envolve paredes e cômodos.'
+});
+Object.assign(TRANSLATIONS.en, {
+  floorSettings:'Floor settings',
+  cancel:'Cancel',
+  projects:'Projects',project:'Project',projectName:'Project name',renameProject:'Rename project',duplicateProject:'Duplicate project',copy:'copy',
+  deleteBoardConfirm:'Delete project "{name}" and all its floors?',baseElevation:'Base elevation',floorHeight:'Floor height (m)',slabThickness:'Slab (m)',
+  floorSurface:'Storey floor',ghostFloors:'Reference other floors',
+  importFile:'Open VisualMaker file',exportFile:'Download VisualMaker file',invalidFile:'Invalid VisualMaker file or unsupported version.',allFloors:'All floors',floorOnly:'Active floor only',surfaceHelp:'The floor follows the bounding rectangle of walls and rooms.'
+});
+
 let currentLanguage = 'pt-BR';
 
 function t(key, vars){
@@ -246,6 +263,9 @@ function applyStaticTranslations(){
   setTitle('#btn-home','backProjects');
   setText('#btn-undo span','undo');
   setText('#btn-redo span','redo');
+  document.getElementById('btn-undo').setAttribute('aria-label',t('undo'));
+  document.getElementById('btn-redo').setAttribute('aria-label',t('redo'));
+  document.getElementById('blueprint-toggle').setAttribute('aria-label',t('blueprintMode'));
   const viewSwitch=document.querySelector('.view-mode-switch');if(viewSwitch)viewSwitch.setAttribute('aria-label',t('viewMode'));
   const floorSwitch=document.getElementById('floor-switch');if(floorSwitch)floorSwitch.setAttribute('aria-label',t('floors'));
   const floorSelect=document.getElementById('floor-select');if(floorSelect){floorSelect.title=t('floor');floorSelect.setAttribute('aria-label',t('floor'));}
@@ -264,7 +284,7 @@ function applyStaticTranslations(){
     const shortcut=btn.querySelector('kbd')?.textContent||'';
     btn.title=`${t(key)}${shortcut?` (${shortcut})`:''}`;
   });
-  document.querySelectorAll('.mini-label').forEach((el,index)=>{
+  document.querySelectorAll('.mini-label:not([data-model-label])').forEach((el,index)=>{
     const keys=['construction','library','projectStyle','mirror','grid'];
     if(keys[index])el.textContent=t(keys[index]);
   });
@@ -340,7 +360,7 @@ function applyStoredLanguage(){
 }
 
 /* ===== Estado global ===== */
-let state = { projectId:null, projectName:t('newProject'), elements:[], gridSpacing:0.5, gridOn:true, blueprintOn:false, palette:'technical', view3d:null, activeFloorId:'floor-1', floors:[{id:'floor-1',name:null,elevation:0}] };
+let state = VisualMakerModel.editorState({name:t('newProject')});
 let view = { pxPerMeter:60, panX:80, panY:80 };
 let tool = 'select';
 let selectedId = null;
@@ -403,7 +423,7 @@ function elementAnchor(el){
 }
 function floorDisplayName(floor,index){
   if(floor&&floor.name)return floor.name;
-  return index===0?t('groundFloor'):t('upperFloor',{count:index});
+  return t('floor')+' '+(index+1);
 }
 function activeFloor(){
   return (state.floors||[]).find(f=>f.id===state.activeFloorId)||(state.floors||[])[0]||null;
@@ -414,8 +434,8 @@ const palettes = {
   coastal:{room:'#CFE4DF',object:'#F0F8F7',stroke:'#236C6F',darkRoom:'#28524F',darkObject:'#263B3A',darkStroke:'#83C8C2'},
   mono:{room:'#E2E2E0',object:'#FAFAF8',stroke:'#333333',darkRoom:'#3B3B39',darkObject:'#2E2E2C',darkStroke:'#C9C9C5'}
 };
-function getPalette(theme){
-  const p=palettes[state.palette||'technical']||palettes.technical;
+function getPalette(theme,paletteName=state.palette){
+  const p=palettes[paletteName||'technical']||palettes.technical;
   const useDark=theme==='dark'||(theme==null&&document.body.classList.contains('dark-mode'));
   return useDark?{room:p.darkRoom,object:p.darkObject,stroke:p.darkStroke}:{room:p.room,object:p.object,stroke:p.stroke};
 }
@@ -453,7 +473,7 @@ const floorMaterials = {
   concrete:'floor_concrete',
   grass:'floor_grass'
 };
-function floorMaterialBase(room, theme){
+function floorMaterialBase(room, theme, paletteName=state.palette){
   if(room && room.color) return room.color;
   const material=(room&&room.material)||'solid';
   const dark=theme==='dark'||(theme==null&&document.body.classList.contains('dark-mode'));
@@ -461,21 +481,30 @@ function floorMaterialBase(room, theme){
   if(material==='tile') return dark?'#59616A':'#D8D6D0';
   if(material==='concrete') return dark?'#50555A':'#B8BAB9';
   if(material==='grass') return dark?'#3F623B':'#6F995A';
-  return getPalette(theme).room;
+  return getPalette(theme,paletteName).room;
 }
 
 /* ===== Histórico (desfazer/refazer) ===== */
 function snapshotElements(){
-  return JSON.parse(JSON.stringify({elements:state.elements,floors:state.floors,activeFloorId:state.activeFloorId}));
+  return VisualMakerModel.serialize(state);
 }
 function restoreHistorySnapshot(snapshot){
-  const data=Array.isArray(snapshot)?{elements:snapshot}:snapshot||{};
-  state.elements=JSON.parse(JSON.stringify(data.elements||[]));
-  if(Array.isArray(data.floors)&&data.floors.length)state.floors=JSON.parse(JSON.stringify(data.floors));
-  state.activeFloorId=data.activeFloorId||state.activeFloorId||(state.floors[0]&&state.floors[0].id)||'floor-1';
-  if(!(state.floors||[]).some(f=>f.id===state.activeFloorId))state.activeFloorId=state.floors[0].id;
+  const sameProject=snapshot.activeProjectId===state.activeProjectId;
+  const currentView=sameProject&&window.get3DViewState?window.get3DViewState():null;
+  state = VisualMakerModel.editorState(snapshot, state.projectId);
+  if(currentView)state.view3d=currentView;
+  mirrorState={xActive:false,yActive:false,axisX:null,axisY:null,...activeProject().settings.mirror};
+  syncProjectControls();
+  if(window.restore3DViewState)window.restore3DViewState(state.view3d,{restoreMode:true});
 }
 function historyEquals(a,b){ return JSON.stringify(a||{})===JSON.stringify(b||{}); }
+function syncHistoryContext(){
+  // Navigation is not an undo step, but undo should return to the edited board.
+  const snapshot=history[historyIndex];
+  const project=snapshot?.projects.find(p=>p.id===state.activeProjectId);
+  if(!project||!project.floors.some(f=>f.id===state.activeFloorId))return;
+  snapshot.activeProjectId=state.activeProjectId;project.activeFloorId=state.activeFloorId;
+}
 function updateHistoryButtons(){
   const undoBtn=document.getElementById('btn-undo'),redoBtn=document.getElementById('btn-redo');
   if(undoBtn)undoBtn.disabled=historyIndex<=0;
@@ -525,79 +554,124 @@ function flashSaveIndicator(){
   setTimeout(updateSaveButton, 1100);
 }
 
-/* ===== Andares ===== */
+/* ===== Projetos e pavimentos ===== */
+function activeProject(){ return VisualMakerModel.activeProject(state); }
+function projectDisplayName(project,index){ return project.name || t('project')+' '+(index+1); }
 function normalizeFloors(){
-  if(!Array.isArray(state.floors)||!state.floors.length)state.floors=[{id:'floor-1',name:null,elevation:0}];
-  state.floors.forEach((floor,index)=>{
-    if(!floor.id)floor.id=`floor-${index+1}`;
-    if(!Number.isFinite(Number(floor.elevation)))floor.elevation=index*3;
-  });
+  state.floors.forEach((floor,index)=>{floor.level=index;});
   if(!state.floors.some(f=>f.id===state.activeFloorId))state.activeFloorId=state.floors[0].id;
 }
 function updateFloorControls(){
   normalizeFloors();
-  const select=document.getElementById('floor-select');if(!select)return;
-  select.innerHTML='';
-  state.floors.forEach((floor,index)=>{
-    const opt=document.createElement('option');opt.value=floor.id;opt.textContent=floorDisplayName(floor,index);select.appendChild(opt);
-  });
-  select.value=state.activeFloorId;
-  const del=document.getElementById('floor-delete');if(del)del.disabled=state.floors.length<=1;
+  for(const [id,items,selected,label] of [
+    ['project-select',state.projects,state.activeProjectId,projectDisplayName],
+    ['floor-select',state.floors,state.activeFloorId,floorDisplayName]]){
+    const select=document.getElementById(id);if(!select)continue;
+    select.replaceChildren();
+    items.forEach((item,index)=>{const opt=document.createElement('option');opt.value=item.id;opt.textContent=label(item,index);select.appendChild(opt);});
+    select.value=selected;
+  }
+  document.getElementById('floor-delete').disabled=state.floors.length<=1;
+  document.getElementById('project-delete').disabled=state.projects.length<=1;
+  const f=activeFloor(),p=activeProject();
+  document.getElementById('floor-height').value=f.height;
+  document.getElementById('floor-slab').value=f.slabThickness;
+  document.getElementById('surface-enabled').checked=f.floorSurface.enabled;
+  document.getElementById('surface-material').value=f.floorSurface.material;
+  document.getElementById('surface-color').value=f.floorSurface.color||floorMaterialBase(f.floorSurface);
+  document.getElementById('floor-ghost').checked=!!p.settings.ghostFloors;
+  const layout=VisualMakerModel.floorLayout(p).find(e=>e.floor.id===f.id);
+  document.getElementById('floor-elevation').textContent=t('baseElevation')+': '+formatMeters(layout.elevation);
+  document.querySelectorAll('[data-model-label]').forEach(el=>{el.textContent=t(el.dataset.modelLabel);});
+  document.querySelectorAll('[data-model-title]').forEach(el=>{el.title=t(el.dataset.modelTitle);el.setAttribute('aria-label',el.title);});
 }
-function switchFloor(floorId,mark=false){
-  normalizeFloors();
-  if(!state.floors.some(f=>f.id===floorId)||floorId===state.activeFloorId)return;
-  state.activeFloorId=floorId;
+function syncProjectControls(){
+  document.getElementById('project-name-input').value=state.projectName;
+  document.getElementById('grid-toggle').checked=state.gridOn;
+  document.getElementById('grid-spacing').value=Math.round(state.gridSpacing*100);
+  document.getElementById('blueprint-toggle').checked=!!state.blueprintOn;
+  document.getElementById('mirror-x-toggle').checked=mirrorState.xActive;
+  document.getElementById('mirror-y-toggle').checked=mirrorState.yActive;
+  applyProjectAppearance();updateFloorControls();
+}
+function finishContextEditing(){
+  document.getElementById('text-editor-input').blur();
+  if(window.finish3DInteraction)window.finish3DInteraction();
   clearSelection();clearSmartGuides();dragInfo=null;clearDrafts();
+}
+function refreshContext(){
   if(typeof ensureOpeningBindings==='function')ensureOpeningBindings();
-  updateFloorControls();updatePropertiesPanel();
+  syncProjectControls();updatePropertiesPanel();
   if(document.getElementById('screen-editor').classList.contains('active')){fitView();updateZoomLabel();}
   render();
-  if(typeof window.onActiveFloorChanged==='function')window.onActiveFloorChanged();
-  else if(typeof window.refresh3DView==='function')window.refresh3DView();
-  if(mark)markUnsaved();
+  if(window.onActiveFloorChanged)window.onActiveFloorChanged();
 }
-function newFloorId(){
-  let id;do{id='floor-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,5);}while((state.floors||[]).some(f=>f.id===id));return id;
+function switchFloor(floorId){
+  if(!state.floors.some(f=>f.id===floorId)||floorId===state.activeFloorId)return;
+  finishContextEditing();state.activeFloorId=floorId;
+  refreshContext();syncHistoryContext();markUnsaved();
 }
-function cloneFloorElements(sourceFloorId,targetFloorId){
-  const source=state.elements.filter(el=>(el.floorId||sourceFloorId)===sourceFloorId);
-  const idMap=new Map();
-  source.forEach(el=>idMap.set(el.id,genId()));
-  const copies=source.map(el=>{
-    const copy=JSON.parse(JSON.stringify(el));
-    copy.id=idMap.get(el.id);copy.floorId=targetFloorId;
-    if((copy.type==='door'||copy.type==='window')&&copy.wallId)copy.wallId=idMap.get(copy.wallId)||null;
-    return copy;
+function captureProjectView(){
+  state.view2d={...view};
+  activeProject().settings.mirror={...mirrorState};
+  if(window.get3DViewState)state.view3d=window.get3DViewState();
+}
+function switchBoard(projectId,recordNavigation=true){
+  if(!state.projects.some(p=>p.id===projectId)||projectId===state.activeProjectId)return;
+  finishContextEditing();captureProjectView();state.activeProjectId=projectId;
+  mirrorState=activeProject().settings.mirror||{xActive:false,yActive:false,axisX:null,axisY:null};
+  document.getElementById('mirror-x-toggle').checked=mirrorState.xActive;
+  document.getElementById('mirror-y-toggle').checked=mirrorState.yActive;
+  refreshContext();
+  if(state.view2d){view={...state.view2d};updateZoomLabel();render();}
+  if(window.restore3DViewState)window.restore3DViewState(state.view3d,{restoreMode:true});
+  if(recordNavigation)syncHistoryContext();
+  markUnsaved();
+}
+function addBoard(duplicate=false){
+  finishContextEditing();captureProjectView();
+  const source=activeProject();
+  const p=duplicate?VisualMakerModel.duplicateProject(source):VisualMakerModel.project();
+  if(duplicate)p.name=projectDisplayName(source,state.projects.indexOf(source))+' ('+t('copy')+')';
+  state.projects.push(p);switchBoard(p.id);pushHistory();
+}
+function renameBoard(){
+  const p=activeProject(),input=document.getElementById('project-rename-input');
+  input.value=projectDisplayName(p,state.projects.indexOf(p));
+  input.dataset.projectId=p.id;input.classList.remove('hidden');input.focus();input.select();
+}
+function deleteBoard(){
+  if(state.projects.length<=1)return;
+  const p=activeProject();
+  confirmHierarchyDelete(t('deleteBoardConfirm',{name:projectDisplayName(p,state.projects.indexOf(p))}),()=>{
+    switchBoard(state.projects.find(other=>other!==p).id,false);
+    state.projects=state.projects.filter(other=>other!==p);updateFloorControls();pushHistory();
   });
-  state.elements.push(...copies);
-  return copies;
 }
 function addFloor(duplicateCurrent=false){
-  normalizeFloors();
-  const sourceId=state.activeFloorId;
-  const id=newFloorId();
-  const maxElevation=Math.max(...state.floors.map(f=>Number(f.elevation)||0));
-  const floor={id,name:null,elevation:maxElevation+3};
-  state.floors.push(floor);
-  if(duplicateCurrent)cloneFloorElements(sourceId,id);
-  state.activeFloorId=id;
-  clearSelection();clearSmartGuides();
-  if(typeof ensureOpeningBindings==='function')ensureOpeningBindings();
-  updateFloorControls();pushHistory();updatePropertiesPanel();render();
-  if(typeof window.onActiveFloorChanged==='function')window.onActiveFloorChanged();
+  finishContextEditing();
+  const source=activeFloor(),floor=VisualMakerModel.floor(duplicateCurrent?source:{},state.activeProjectId,state.floors.length);
+  floor.id=VisualMakerModel.id('floor');floor.name=null;
+  const ids=new Map(floor.elements.map(el=>[el.id,genId()]));
+  floor.elements.forEach(el=>{el.id=ids.get(el.id);el.floorId=floor.id;if(el.wallId)el.wallId=ids.get(el.wallId)||null;});
+  state.floors.push(floor);state.activeFloorId=floor.id;
+  refreshContext();pushHistory();
 }
 function deleteActiveFloor(){
-  normalizeFloors();if(state.floors.length<=1)return;
-  const index=state.floors.findIndex(f=>f.id===state.activeFloorId);if(index<0)return;
-  const floor=state.floors[index],name=floorDisplayName(floor,index);
-  if(!confirm(t('deleteFloorConfirm',{name})))return;
-  state.elements=state.elements.filter(el=>(el.floorId||floor.id)!==floor.id);
-  state.floors.splice(index,1);
-  state.activeFloorId=state.floors[Math.max(0,index-1)]?.id||state.floors[0].id;
-  clearSelection();clearSmartGuides();
-  updateFloorControls();pushHistory();updatePropertiesPanel();render();
-  if(typeof window.onActiveFloorChanged==='function')window.onActiveFloorChanged();
+  if(state.floors.length<=1)return;
+  const index=state.floors.findIndex(f=>f.id===state.activeFloorId),floor=activeFloor();
+  confirmHierarchyDelete(t('deleteFloorConfirm',{name:floorDisplayName(floor,index)}),()=>{
+    finishContextEditing();state.floors.splice(index,1);
+    state.activeFloorId=state.floors[Math.max(0,index-1)].id;
+    refreshContext();pushHistory();
+  });
+}
+let hierarchyDeleteAction=null;
+function confirmHierarchyDelete(message,action){
+  hierarchyDeleteAction=action;
+  document.getElementById('hierarchy-confirm-message').textContent=message;
+  document.getElementById('hierarchy-confirm').showModal();
+  document.getElementById('hierarchy-cancel').focus();
 }
 
 /* ===== Posicionamento de objetos / snap arquitetônico ===== */
@@ -1114,9 +1188,49 @@ const floorDuplicateEl=document.getElementById('floor-duplicate');
 if(floorDuplicateEl)floorDuplicateEl.addEventListener('click',()=>addFloor(true));
 const floorDeleteEl=document.getElementById('floor-delete');
 if(floorDeleteEl)floorDeleteEl.addEventListener('click',deleteActiveFloor);
+document.getElementById('project-select').addEventListener('change',e=>switchBoard(e.target.value));
+document.addEventListener('pointerdown',e=>{
+  if(!e.target.closest('.hierarchy-settings'))document.querySelector('.hierarchy-settings').open=false;
+});
+document.getElementById('project-add').addEventListener('click',()=>addBoard());
+document.getElementById('project-rename').addEventListener('click',renameBoard);
+document.getElementById('project-rename-input').addEventListener('blur',e=>{
+  const input=e.target,p=state.projects.find(p=>p.id===input.dataset.projectId);
+  if(p&&input.value.trim()&&p.name!==input.value.trim()){p.name=input.value.trim();updateFloorControls();pushHistory();}
+  input.classList.add('hidden');
+});
+document.getElementById('project-rename-input').addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.target.dataset.projectId='';e.target.blur();}
+  if(e.key==='Enter'){e.preventDefault();e.target.blur();}
+});
+document.getElementById('project-duplicate').addEventListener('click',()=>addBoard(true));
+document.getElementById('project-delete').addEventListener('click',deleteBoard);
+document.getElementById('hierarchy-cancel').addEventListener('click',()=>document.getElementById('hierarchy-confirm').close());
+document.getElementById('hierarchy-delete').addEventListener('click',()=>{
+  const action=hierarchyDeleteAction;hierarchyDeleteAction=null;
+  document.getElementById('hierarchy-confirm').close();if(action)action();
+});
+document.getElementById('hierarchy-confirm').addEventListener('close',()=>{hierarchyDeleteAction=null;});
+for(const id of ['floor-height','floor-slab','surface-enabled','surface-material','surface-color','floor-ghost']){
+  document.getElementById(id).addEventListener('change',e=>{
+    const input=e.target,f=activeFloor(),p=activeProject();
+    if(input.type==='number'&&!input.checkValidity()){updateFloorControls();return;}
+    if(id==='floor-height'){
+      const previous=f.height;f.height=Number(input.value);
+      f.elements.filter(el=>el.type==='wall'&&(el.height==null||el.height===previous)).forEach(el=>{el.height=f.height;});
+    }
+    if(id==='floor-slab')f.slabThickness=Number(input.value);
+    if(id==='surface-enabled')f.floorSurface.enabled=input.checked;
+    if(id==='surface-material'){f.floorSurface.material=input.value;f.floorSurface.color=null;}
+    if(id==='surface-color')f.floorSurface.color=input.value;
+    if(id==='floor-ghost')p.settings.ghostFloors=input.checked;
+    updateFloorControls();pushHistory();render();
+  });
+}
 updateFloorControls();
 
 /* ===== Interação no canvas ===== */
+svgEl.addEventListener('selectstart',e=>e.preventDefault());
 svgEl.addEventListener('mousedown', (e)=>{
   const rect = svgEl.getBoundingClientRect();
   const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
@@ -1383,6 +1497,7 @@ svgEl.addEventListener('wheel', (e)=>{
 
 /* ===== Atalhos de teclado ===== */
 window.addEventListener('keydown', (e)=>{
+  if(document.getElementById('hierarchy-confirm').open)return;
   if (!document.getElementById('screen-editor').classList.contains('active')) return;
   if(e.key==='Escape'&&!document.getElementById('unsaved-modal').classList.contains('hidden')){closeUnsavedDialog();return;}
   if(e.key==='Escape'&&!document.getElementById('export-modal').classList.contains('hidden')){document.getElementById('export-modal').classList.add('hidden');return;}
@@ -1413,7 +1528,7 @@ window.addEventListener('keydown', (e)=>{
 
 /* ===== Navegação entre telas ===== */
 function startNewProject(){
-  state = { projectId:null, projectName:t('newProject'), elements:[], gridSpacing:0.5, gridOn:true, blueprintOn:false, palette:'technical', view3d:null, activeFloorId:'floor-1', floors:[{id:'floor-1',name:null,elevation:0}] };
+  state = VisualMakerModel.editorState({name:t('newProject')});
   clearSelection();clearSmartGuides();
   mirrorState = { xActive:false, yActive:false, axisX:null, axisY:null };
   view = { pxPerMeter:60, panX:80, panY:80 };
@@ -1436,7 +1551,8 @@ function goToEditor(){
   history = [snapshotElements()]; historyIndex = 0; updateHistoryButtons();
   requestAnimationFrame(()=>{
     resizeSVG();
-    fitView();
+    if(state.view2d&&['pxPerMeter','panX','panY'].every(key=>Number.isFinite(state.view2d[key]))&&state.view2d.pxPerMeter>0)view={...state.view2d};
+    else fitView();
     updateZoomLabel();
     render();
     updatePropertiesPanel();
@@ -1457,7 +1573,7 @@ function goHome(){
 async function openProject(id){
   const ok = await loadProjectData(id);
   if (!ok){ alert(t('couldNotOpenProject')); return; }
-  mirrorState = { xActive:false, yActive:false, axisX:null, axisY:null };
+  mirrorState = { xActive:false, yActive:false, axisX:null, axisY:null, ...activeProject().settings.mirror };
   view = { pxPerMeter:60, panX:80, panY:80 };
   goToEditor();
 }
@@ -1503,7 +1619,7 @@ function buildExportSVG(bbox, pad, ppm, mode){
   const w=(bbox.maxX-bbox.minX+pad*2)*ppm, h=(bbox.maxY-bbox.minY+pad*2)*ppm;
   const ox=-bbox.minX+pad, oy=-bbox.minY+pad;
   const c=exportThemeColors(mode),blueprint=c.blueprint;
-  const exportElements=typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements;
+  const exportElements=[...floorSurfaceElements(),...getActiveFloorElements()].map(el=>({...el}));
   const {bg,ink,muted,room,objectFill,objectStroke}=c;
   let parts=[`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`, `<rect width="${w}" height="${h}" fill="${bg}"/>`];
   if(!blueprint){
@@ -1524,6 +1640,7 @@ function buildExportSVG(bbox, pad, ppm, mode){
     const x=(el.x+ox)*ppm, y=(el.y+oy)*ppm, ww=el.w*ppm, hh=el.h*ppm;
     const roomFill=(!blueprint&&el.__exportPatternId)?`url(#${el.__exportPatternId})`:(el.color||room);
     parts.push(`<rect x="${x}" y="${y}" width="${ww}" height="${hh}" fill="${roomFill}" fill-opacity="${el.__exportPatternId?'0.82':'0.42'}"/>`);
+    if(el.surfaceOnly)continue;
     parts.push(`<text x="${x+ww/2}" y="${y+hh/2-4}" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-weight="600" font-size="${Math.max(12,ppm*0.14)}" fill="${ink}">${escapeXML(el.name)}</text>`);
     parts.push(`<text x="${x+ww/2}" y="${y+hh/2+14}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="${Math.max(10,ppm*0.11)}" fill="${muted}">${localizedNumber(el.w*el.h)} m²</text>`);
   }
@@ -1580,7 +1697,7 @@ function buildExportSVG(bbox, pad, ppm, mode){
     const textColor=blueprint?ink:((mode==='dark'&&isDefaultText)?ink:(el.color||ink));
     parts.push(`<text x="${x}" y="${y}" font-family="IBM Plex Sans, sans-serif" font-size="${el.size||16}" font-weight="${el.bold?700:400}" fill="${textColor}" transform="rotate(${el.rotation||0} ${x} ${y})">${escapeXML(el.content)}</text>`);
   }
-  const totalArea = exportElements.filter(e=>e.type==='room').reduce((s,r)=>s+r.w*r.h,0);
+  const totalArea = exportElements.filter(e=>e.type==='room'&&!e.surfaceOnly).reduce((s,r)=>s+r.w*r.h,0);
   const footer = totalArea>0 ? `Visual Maker · ${t('totalArea',{area:localizedNumber(totalArea)})}` : `Visual Maker · ${t('wallCount',{count:exportElements.filter(e=>e.type==='wall').length})}`;
   parts.push(`<text x="10" y="${h-10}" font-family="IBM Plex Mono, monospace" font-size="11" fill="${muted}">${escapeXML(footer)}</text>`);
   parts.push('</svg>');
@@ -1652,6 +1769,25 @@ document.getElementById('project-name-input').addEventListener('input', (e)=>{ s
 document.getElementById('btn-undo').addEventListener('click', undo);
 document.getElementById('btn-redo').addEventListener('click', redo);
 document.getElementById('btn-save').addEventListener('click', ()=>saveProject(true));
+document.getElementById('export-file').addEventListener('click',()=>{
+  finishContextEditing();captureProjectView();
+  const blob=new Blob([JSON.stringify(VisualMakerModel.serialize(state),null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download=safeProjectFilename()+'.visualmaker.json';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);closeExportModal();
+});
+document.getElementById('import-file').addEventListener('click',()=>document.getElementById('import-file-input').click());
+document.getElementById('import-file-input').addEventListener('change',async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(!data||(!Array.isArray(data.projects)&&!Array.isArray(data.elements)&&!Array.isArray(data.floors)))throw new Error('Invalid file');
+    const imported=VisualMakerModel.editorState(data);
+    startNewProject();state=imported;state.projectName ||= file.name.replace(/\.(visualmaker\.)?json$/i,'');
+    goToEditor();
+  }catch(error){console.error('VisualMaker import',error);alert(t('invalidFile'));}
+  e.target.value='';
+});
 const exportModal=document.getElementById('export-modal');
 function closeExportModal(){exportModal.classList.add('hidden');}
 document.getElementById('btn-export').addEventListener('click',()=>{const defaultMode=state.blueprintOn?'blueprint':(document.body.classList.contains('dark-mode')?'dark':'light');document.querySelector(`input[name="export-mode"][value="${defaultMode}"]`).checked=true;exportModal.classList.remove('hidden');});
@@ -1659,7 +1795,7 @@ document.getElementById('export-close').addEventListener('click',closeExportModa
 exportModal.addEventListener('mousedown',e=>{if(e.target===exportModal)closeExportModal();});
 document.getElementById('export-png').addEventListener('click',()=>{const mode=document.querySelector('input[name="export-mode"]:checked').value;closeExportModal();exportPNG(mode);});
 document.getElementById('export-svg').addEventListener('click',()=>{const mode=document.querySelector('input[name="export-mode"]:checked').value;closeExportModal();exportSVGFile(mode);});
-document.getElementById('blueprint-toggle').addEventListener('change',e=>{state.blueprintOn=e.target.checked;applyProjectAppearance();markUnsaved();render();});
+document.getElementById('blueprint-toggle').addEventListener('change',e=>{state.blueprintOn=e.target.checked;applyProjectAppearance();pushHistory();render();});
 document.getElementById('theme-toggle').addEventListener('click',()=>setDarkMode(!document.body.classList.contains('dark-mode'),true));
 document.getElementById('home-theme-toggle').addEventListener('click',()=>setDarkMode(!document.body.classList.contains('dark-mode'),true));
 const settingsPanel=document.getElementById('settings-panel');
@@ -1672,23 +1808,25 @@ document.getElementById('language-select').addEventListener('change',e=>setLangu
 settingsPanel.addEventListener('mousedown',e=>e.stopPropagation());
 document.addEventListener('mousedown',()=>closeSettings());
 
-document.querySelectorAll('.palette-option').forEach(btn=>btn.addEventListener('click',()=>{state.palette=btn.dataset.palette;applyProjectAppearance();markUnsaved();render();if(typeof window.refresh3DView==='function')window.refresh3DView();}));
+document.querySelectorAll('.palette-option').forEach(btn=>btn.addEventListener('click',()=>{state.palette=btn.dataset.palette;applyProjectAppearance();pushHistory();render();}));
 document.getElementById('zoom-in').addEventListener('click', ()=>zoomBy(1.2));
 document.getElementById('zoom-out').addEventListener('click', ()=>zoomBy(1/1.2));
 document.getElementById('zoom-fit').addEventListener('click', ()=>{ fitView(); updateZoomLabel(); render(); });
-document.getElementById('grid-toggle').addEventListener('change', (e)=>{ state.gridOn=e.target.checked; markUnsaved(); render(); });
+document.getElementById('grid-toggle').addEventListener('change', (e)=>{ state.gridOn=e.target.checked; pushHistory(); render(); });
 document.getElementById('grid-spacing').addEventListener('change', (e)=>{
   const v = parseFloat(e.target.value);
-  if (v>0){ state.gridSpacing = v/100; markUnsaved(); render(); }
+  if (v>0){ state.gridSpacing = v/100; pushHistory(); render(); }
 });
 document.getElementById('mirror-x-toggle').addEventListener('change', (e)=>{
   mirrorState.xActive = e.target.checked;
   if (mirrorState.xActive && mirrorState.axisX==null) mirrorState.axisX = defaultMirrorAxisX();
+  activeProject().settings.mirror={...mirrorState};pushHistory();
   render();
 });
 document.getElementById('mirror-y-toggle').addEventListener('change', (e)=>{
   mirrorState.yActive = e.target.checked;
   if (mirrorState.yActive && mirrorState.axisY==null) mirrorState.axisY = defaultMirrorAxisY();
+  activeProject().settings.mirror={...mirrorState};pushHistory();
   render();
 });
 window.addEventListener('resize', resizeSVG);

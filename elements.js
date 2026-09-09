@@ -11,40 +11,46 @@
 
 function activeFloorId(){ return (state&&state.activeFloorId)||'floor-1'; }
 
+// Derived surface shared by 2D display and image exports; never an editable room.
+function floorSurfaceElements(){
+  const floor=activeFloor(),bounds=VisualMakerModel.footprint(floor);
+  return bounds&&floor.floorSurface.enabled?[{...bounds,...floor.floorSurface,id:'storey-surface',type:'room',surfaceOnly:true,name:'',color:floorMaterialBase(floor.floorSurface)}]:[];
+}
+
 function addWall(x1,y1,x2,y2,thickness){
   thickness = thickness || 0.15;
   if (Math.hypot(x2-x1,y2-y1) < 0.02) return null;
-  const el = {id:genId(), floorId:activeFloorId(), type:'wall', x1,y1,x2,y2, thickness, height:2.7, color:'#F0EEE9'};
+  const el = {id:genId(), projectId:state.activeProjectId, floorId:activeFloorId(), type:'wall', x1,y1,x2,y2, thickness, height:activeFloor().height, color:'#F0EEE9'};
   state.elements.push(el);
   return el;
 }
 function addText(x,y,content){
-  const el = {id:genId(), floorId:activeFloorId(), type:'text', x, y, content, size:16, bold:false, rotation:0, color:'#1B2430'};
+  const el = {id:genId(), projectId:state.activeProjectId, floorId:activeFloorId(), type:'text', x, y, content, size:16, bold:false, rotation:0, color:'#1B2430'};
   state.elements.push(el);
   return el;
 }
 function addDoor(x,y,angle,wallThickness,wallId,wallT){
-  const el = {id:genId(), floorId:activeFloorId(), type:'door', x, y, width:0.8, height:2.1, angle:angle||0, wallThickness:wallThickness||0.15, color:'#A56B43', wallId:wallId||null, wallT:Number.isFinite(wallT)?wallT:null, doorStyle:'swing', hingeSide:'left', swingSide:1};
+  const el = {id:genId(), projectId:state.activeProjectId, floorId:activeFloorId(), type:'door', x, y, width:0.8, height:2.1, angle:angle||0, wallThickness:wallThickness||0.15, color:'#A56B43', wallId:wallId||null, wallT:Number.isFinite(wallT)?wallT:null, doorStyle:'swing', hingeSide:'left', swingSide:1};
   state.elements.push(el);
   return el;
 }
 function addWindow(x,y,angle,wallThickness,wallId,wallT){
-  const el = {id:genId(), floorId:activeFloorId(), type:'window', x, y, width:1.2, height:1.2, sillHeight:0.9, angle:angle||0, wallThickness:wallThickness||0.15, color:'#9CC9DF', wallId:wallId||null, wallT:Number.isFinite(wallT)?wallT:null, windowStyle:'sliding', windowSide:1};
+  const el = {id:genId(), projectId:state.activeProjectId, floorId:activeFloorId(), type:'window', x, y, width:1.2, height:1.2, sillHeight:0.9, angle:angle||0, wallThickness:wallThickness||0.15, color:'#9CC9DF', wallId:wallId||null, wallT:Number.isFinite(wallT)?wallT:null, windowStyle:'sliding', windowSide:1};
   state.elements.push(el);
   return el;
 }
 function addRoom(x,y,w,h,name){
-  const el = {id:genId(), floorId:activeFloorId(), type:'room', x, y, w, h, name: name||'Cômodo', material:'solid'};
+  const el = {id:genId(), projectId:state.activeProjectId, floorId:activeFloorId(), type:'room', x, y, w, h, name: name||'Cômodo', material:'solid'};
   state.elements.push(el);
   return el;
 }
 function addCota(x1,y1,x2,y2,offset){
-  const el = {id:genId(), floorId:activeFloorId(), type:'cota', x1,y1,x2,y2, offset: offset==null?0.3:offset};
+  const el = {id:genId(), projectId:state.activeProjectId, floorId:activeFloorId(), type:'cota', x1,y1,x2,y2, offset: offset==null?0.3:offset};
   state.elements.push(el);
   return el;
 }
 function addObject(x,y,kind,label,category,w,h){
-  const el = {id:genId(), floorId:activeFloorId(), type:'object', x, y, kind, label, category, w:w||1, h:h||1, rotation:0, color:null, elevation:0};
+  const el = {id:genId(), projectId:state.activeProjectId, floorId:activeFloorId(), type:'object', x, y, kind, label, category, w:w||1, h:h||1, rotation:0, color:null, elevation:0};
   state.elements.push(el);
   return el;
 }
@@ -114,13 +120,13 @@ function pasteClipboard(){
   if(clipboard.multi&&Array.isArray(clipboard.elements)){
     const source=JSON.parse(JSON.stringify(clipboard.elements));
     const idMap=new Map(source.map(el=>[el.id,genId()]));
-    const copies=source.map(el=>{const copy=el;copy.id=idMap.get(el.id);copy.floorId=activeFloorId();offsetCopy(copy);if((copy.type==='door'||copy.type==='window')&&copy.wallId){copy.wallId=idMap.get(copy.wallId)||null;if(!copy.wallId)copy.wallT=null;}return copy;});
+    const copies=source.map(el=>{const copy=el;copy.id=idMap.get(el.id);copy.floorId=activeFloorId();copy.projectId=state.activeProjectId;offsetCopy(copy);if((copy.type==='door'||copy.type==='window')&&copy.wallId){copy.wallId=idMap.get(copy.wallId)||null;if(!copy.wallId)copy.wallT=null;}return copy;});
     state.elements.push(...copies);
     copies.forEach(copy=>{if((copy.type==='door'||copy.type==='window')&&copy.wallId){const wall=getElement(copy.wallId);if(wall)attachOpeningToWall(copy,wall,copy.wallT);}else if((copy.type==='door'||copy.type==='window')&&typeof bindOpeningToNearestWall==='function')bindOpeningToNearestWall(copy,.65);});
     if(typeof setSelection==='function')setSelection(copies.map(c=>c.id),copies[copies.length-1]?.id);else selectedId=copies[copies.length-1]?.id||null;
     pushHistory();render();updatePropertiesPanel();return;
   }
-  const copy = JSON.parse(JSON.stringify(clipboard)); copy.id = genId();copy.floorId=activeFloorId();
+  const copy = JSON.parse(JSON.stringify(clipboard)); copy.id = genId();copy.floorId=activeFloorId();copy.projectId=state.activeProjectId;
   offsetCopy(copy);
   if(copy.type==='door'||copy.type==='window'){ copy.wallId=null; copy.wallT=null; if(typeof bindOpeningToNearestWall==='function')bindOpeningToNearestWall(copy,.65); }
   state.elements.push(copy); if(typeof setSingleSelection==='function')setSingleSelection(copy.id);else selectedId = copy.id;

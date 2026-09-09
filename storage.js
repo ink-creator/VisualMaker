@@ -1,8 +1,4 @@
-/* storage.js
-   Salvamento local dos projetos (via window.storage, o armazenamento
-   persistente de artefatos do Claude — funciona como o localStorage
-   pedido no documento, mas é o que funciona dentro do preview do
-   Claude.ai) e a tela inicial "Meus projetos". */
+/* Local file storage and home screen. All projects and floors use model.js serialization. */
 
 const projectStorage = window.storage || {
   async set(key,value){ localStorage.setItem(key,value); return {key}; },
@@ -22,19 +18,8 @@ async function saveProject(showFeedback){
     : (state.view3d||null);
   state.view3d = current3DView;
 
-  const payload = JSON.stringify({
-    schemaVersion:3,
-    name:state.projectName,
-    activeFloorId:state.activeFloorId||'floor-1',
-    floors:Array.isArray(state.floors)&&state.floors.length?state.floors:[{id:'floor-1',name:null,elevation:0}],
-    elements:state.elements,
-    gridSpacing:state.gridSpacing,
-    gridOn:state.gridOn,
-    blueprintOn:state.blueprintOn,
-    palette:state.palette,
-    view3d:current3DView,
-    updatedAt:Date.now()
-  });
+  if(typeof captureProjectView==='function')captureProjectView();
+  const payload = JSON.stringify({...VisualMakerModel.serialize(state), updatedAt:Date.now()});
   try{
     await projectStorage.set('project:'+state.projectId, payload);
     unsavedChanges = false;
@@ -70,16 +55,8 @@ async function loadProjectData(id){
     const r = await projectStorage.get('project:'+id);
     if (!r || !r.value) return false;
     const data = JSON.parse(r.value);
-    state.projectId = id;
-    state.projectName = data.name || t('untitled');
-    state.activeFloorId = data.activeFloorId || 'floor-1';
-    state.floors = Array.isArray(data.floors)&&data.floors.length ? data.floors : [{id:'floor-1',name:null,elevation:0}];
-    state.elements = (data.elements || []).map(el=>el&&el.floorId?el:Object.assign({floorId:state.activeFloorId},el));
-    state.gridSpacing = data.gridSpacing || 0.5;
-    state.gridOn = data.gridOn!==false;
-    state.blueprintOn = !!data.blueprintOn;
-    state.palette = data.palette || 'technical';
-    state.view3d = data.view3d || null;
+    state = VisualMakerModel.editorState(data,id);
+    state.projectName ||= t('untitled');
     if(typeof ensureOpeningBindings==='function')ensureOpeningBindings();
     return true;
   } catch(err){

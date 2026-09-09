@@ -49,6 +49,33 @@ Browser-based floor plan editor for creating, editing and visualizing architectu
 
 # English
 
+## Projects and storeys (file format v4)
+
+One VisualMaker file can contain independent **Projects**. Use the top bar beside undo/redo to add, rename, duplicate, delete and switch projects. Each project owns its floors, elements, palette, grid and saved view. The top bar names the complete file.
+
+**Floors** belong to the selected project. Add or duplicate a floor and select it to edit its contents in 2D or 3D. Other floors can be shown as faint alignment references in 2D. In 3D, show the entire building or only the active floor.
+
+Floor settings control wall height, slab thickness and surface material/color. The next storey starts at the previous storey's base plus its tallest wall (at least the configured floor height), plus the next slab thickness. Object elevation is relative to its own floor. The renderer uses **Z** for the vertical axis; one unit is one metre.
+
+Automatic slabs currently use the bounding rectangle of the floor's walls and rooms; individual rooms retain their own floor finishes. Floor and slab settings are in the menu beside the floor selector.
+
+Save keeps every project and floor in browser storage. **Export → Download VisualMaker file** creates an editable `.visualmaker.json` backup; **Open VisualMaker file** on the home screen imports it. SVG/PNG export the active floor; OBJ exports all floors of the active project. The standalone HTML includes all projects and storeys, their materials, project/floor selectors and camera controls, with no network dependencies.
+
+Older flat files open as Project 1 / Floor 1. The previous independent “floors” migrate into separate projects, each starting at Floor 1, preserving their contents and names.
+
+### Model and checks
+
+`model.js` is the canonical schema and migration layer: `projects[].floors[].elements`. Typed elements retain their existing geometry and carry `projectId` and `floorId`. The editor's `state.elements`, `state.floors` and settings accessors point directly into the active project/floor; no parallel element list is stored. Height calculation is centralized in `VisualMakerModel.floorLayout`. History snapshots and both local/file storage serialize the complete hierarchy. The WebGL, OBJ and HTML paths share the same scene builder.
+
+Run regression tests with Node.js (no package installation required):
+
+```bash
+node --test tests/model.test.cjs tests/storage.test.cjs tests/3d.test.cjs tests/history.test.cjs
+node tests/serve.cjs
+```
+
+The preview runs at `http://127.0.0.1:4173`. Tests cover migration, independent data, duplication/attachments, round trips, storage failure, floor elevations, selection on upper floors, slab geometry and standalone HTML/OBJ. Generated test files live in ignored `tests/.generated/`.
+
 ## About
 
 **VisualMaker** is a browser-based floor plan editor designed to make the creation and visualization of architectural layouts simple and interactive.
@@ -346,6 +373,22 @@ Future features and improvements can be introduced gradually in new versions.
 ---
 
 # Português
+
+## Projetos e andares (formato v4)
+
+Um arquivo pode reunir vários **Projetos** independentes. Na barra superior, junto de desfazer/refazer, crie, renomeie, duplique, exclua ou alterne entre eles. Cada projeto guarda seus andares, elementos, paleta, grade e visualização. O nome da barra superior identifica o arquivo completo.
+
+Em **Andares**, adicione ou duplique pavimentos e selecione qual deseja editar. No 2D, a opção de referência mostra outros andares com transparência. No 3D, todos os pavimentos aparecem em suas alturas reais; também é possível mostrar apenas o andar ativo.
+
+Em **Configurações**, ajuste altura do andar, espessura da laje, piso, material e cor. A altura do próximo pavimento considera a maior parede do anterior (no mínimo a altura configurada) e a laje do próximo. A elevação de móveis é relativa ao próprio andar. O eixo vertical do renderizador é **Z**, com medidas em metros.
+
+Pisos automáticos usam o retângulo que envolve paredes e cômodos; cada cômodo mantém seu acabamento próprio. As configurações de piso e laje ficam no menu ao lado do seletor de andar.
+
+**Salvar** preserva todos os projetos e andares no navegador. Para um backup editável, use **Exportar → Baixar arquivo VisualMaker**; reabra pelo botão **Abrir arquivo VisualMaker** na tela inicial. PNG/SVG mostram o andar ativo; OBJ inclui todos os andares do projeto ativo. O HTML independente inclui todos os projetos, seletores de projeto/andar, pisos, materiais e controles de câmera, sem depender de internet.
+
+Arquivos antigos sem hierarquia são migrados para **Projeto 1 → Andar 1**. Os antigos “andares”, que funcionavam como quadros independentes, passam a ser projetos separados, preservando nomes e elementos. O novo histórico de desfazer/refazer também preserva a hierarquia completa.
+
+Para validar a implementação, execute `node --test tests/model.test.cjs tests/storage.test.cjs tests/3d.test.cjs tests/history.test.cjs`. A arquitetura e os testes estão descritos na seção em inglês acima.
 
 ## Sobre
 

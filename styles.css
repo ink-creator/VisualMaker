@@ -85,6 +85,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 
 /* ===== EDITOR SCREEN ===== */
 #screen-editor.active{display:flex;flex-direction:column;height:100vh;}
+#screen-editor{-webkit-user-select:none;user-select:none;}
+#screen-editor input,#screen-editor textarea,#screen-editor [contenteditable="true"]{-webkit-user-select:text;user-select:text;}
 .toolbar{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:52px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;gap:12px;}
 .toolbar-left{display:flex;align-items:center;gap:10px;min-width:0;}
 .btn-icon{width:32px;height:32px;border-radius:6px;border:1px solid transparent;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);flex-shrink:0;}
@@ -309,3 +311,47 @@ body.view-3d .properties-panel{z-index:12;}
   background:var(--control);color:var(--text);font:inherit;cursor:pointer;
 }
 body.dark-mode .settings-popover{box-shadow:0 14px 40px rgba(0,0,0,.35);}
+/* Project and floor management alongside undo/redo. */
+.toolbar{height:auto;min-height:64px;padding-block:8px;flex-wrap:wrap}
+.toolbar-left{max-width:220px}
+.toolbar-left .project-name-input{width:175px;max-width:100%}
+.toolbar-actions{flex:1;min-width:0;flex-wrap:wrap;justify-content:flex-end}
+.hierarchy-group{display:grid;gap:3px;flex-shrink:0}
+.hierarchy-label{font:9px var(--font-mono);text-transform:uppercase;letter-spacing:.07em;color:var(--text-secondary);padding-left:4px}
+.project-switch,.floor-switch{position:relative;display:flex;align-items:center;gap:3px;padding:2px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2)}
+.project-switch select,.floor-switch>select{height:28px;min-width:80px;max-width:140px;border:0;background:var(--control);color:var(--text);border-radius:5px;padding:0 8px;font:600 11px var(--font-ui)}
+.toolbar-actions .project-switch button,.toolbar-actions .floor-switch button{width:25px;height:28px;min-width:25px;padding:0;justify-content:center;border:0;background:transparent;font-size:14px}
+.floor-switch #floor-duplicate{display:flex}
+.project-switch #project-delete{color:var(--danger)}
+#project-rename-input{position:absolute;left:0;top:calc(100% + 5px);width:230px;z-index:30;border:1px solid var(--accent);border-radius:6px;padding:9px;background:var(--control);color:var(--text)}
+.hierarchy-settings{position:relative}
+.hierarchy-settings>summary{list-style:none;cursor:pointer;padding:4px 6px;font-size:15px;border-radius:4px}
+.hierarchy-settings>summary::-webkit-details-marker{display:none}
+.hierarchy-settings[open]>summary{background:var(--control);color:var(--accent)}
+.hierarchy-settings-content{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:245px;max-width:calc(100vw - 24px);padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;box-shadow:0 12px 36px #0003;max-height:calc(100vh - 150px);overflow-y:auto}
+.hierarchy-panel select,.hierarchy-panel input:not([type=checkbox]){width:100%;min-width:0;border:1px solid var(--border);border-radius:6px;padding:6px;background:var(--control);color:var(--text);font:inherit}
+.hierarchy-panel label{display:grid;gap:4px;margin:9px 0;font-size:11px}
+.hierarchy-panel .hierarchy-check{display:flex;align-items:center;gap:6px;line-height:1.4}
+.hierarchy-panel input[type=checkbox]{flex-shrink:0}
+.hierarchy-panel small{display:block;font-size:10px;line-height:1.5;color:var(--text-secondary)}
+.hierarchy-panel input[type=color]{height:30px;padding:2px}
+.hierarchy-panel select{max-width:none}
+.dialog-actions{flex-wrap:wrap}
+.viewer-floor-controls{display:flex;gap:8px;align-items:center;font-size:11px;pointer-events:auto}
+.viewer-floor-controls select{max-width:150px;background:var(--control);color:var(--text);border:1px solid var(--border);border-radius:5px;padding:5px}
+#hierarchy-confirm{max-width:min(420px,calc(100vw - 32px));border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);padding:24px;box-shadow:0 16px 60px #0005}
+#hierarchy-confirm::backdrop{background:#0006}
+#hierarchy-confirm p{margin:0 0 20px;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:1450px){
+  .toolbar-actions #btn-undo span,.toolbar-actions #btn-redo span{display:none}
+  .toolbar-actions #btn-undo,.toolbar-actions #btn-redo{padding:7px}
+  .blueprint-switch>span:last-child{display:none}
+}
+@media(max-width:1050px){
+  .toolbar-left{max-width:none;width:100%}
+  .toolbar-actions{justify-content:flex-start}
+}
+@media(max-width:720px){
+  .viewer3d-actions,.viewer-floor-controls{flex-wrap:wrap}
+  .hierarchy-settings-content{right:auto;left:0;transform:translateX(-75%)}
+}

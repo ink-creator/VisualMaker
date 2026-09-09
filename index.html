@@ -53,6 +53,8 @@
       </div>
 
       <p class="projects-section-title">Meus projetos</p>
+      <button class="btn-secondary" id="import-file" data-model-label="importFile">Abrir arquivo VisualMaker</button>
+      <input type="file" id="import-file-input" accept=".json,.visualmaker,application/json" hidden>
       <div class="projects-list" id="projects-list">
         <p class="loading-text">Carregando…</p>
       </div>
@@ -71,16 +73,38 @@
       <div class="toolbar-actions">
         <button id="btn-undo" title="Ctrl+Z"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7H5v-4M5 7c2-3 5-4 8-3 4 1 7 4 7 8s-3 8-8 8c-3 0-6-2-7-5"/></svg><span>Desfazer</span></button>
         <button id="btn-redo" title="Ctrl+Y"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7h4v-4m0 4c-2-3-5-4-8-3-4 1-7 4-7 8s3 8 8 8c3 0 6-2 7-5"/></svg><span>Refazer</span></button>
-        <div class="toolbar-divider"></div>
-        <div class="view-mode-switch" role="group" aria-label="Modo de visualização">
-          <button id="btn-view-2d" class="active" type="button" aria-pressed="true">2D</button>
-          <button id="btn-view-3d" type="button" aria-pressed="false">3D</button>
+        <div class="hierarchy-group">
+          <span class="hierarchy-label" data-model-label="projects">Projetos</span>
+          <div class="project-switch">
+            <select id="project-select" data-model-title="project"></select>
+            <input id="project-rename-input" class="hidden" type="text" data-model-title="projectName" maxlength="120">
+            <button id="project-add" data-model-title="newProject">+</button><button id="project-rename" data-model-title="renameProject">✎</button><button id="project-duplicate" data-model-title="duplicateProject">⧉</button><button id="project-delete" data-model-title="deleteProject">−</button>
+          </div>
         </div>
+        <div class="hierarchy-group">
+          <span class="hierarchy-label" data-model-label="floors">Andares</span>
         <div class="floor-switch" id="floor-switch" aria-label="Andares">
           <select id="floor-select" title="Andar" aria-label="Andar"></select>
           <button id="floor-add" type="button" title="Adicionar andar" aria-label="Adicionar andar">+</button>
           <button id="floor-duplicate" type="button" title="Duplicar andar" aria-label="Duplicar andar">⧉</button>
           <button id="floor-delete" type="button" title="Excluir andar" aria-label="Excluir andar">−</button>
+          <details class="hierarchy-settings hierarchy-panel"><summary data-model-title="floorSettings">⚙</summary><div class="hierarchy-settings-content">
+          <label class="hierarchy-check"><input id="floor-ghost" type="checkbox"><span data-model-label="ghostFloors"></span></label>
+            <label><span data-model-label="floorHeight"></span><input id="floor-height" type="number" min="0.1" max="100" step="0.1"></label>
+            <label><span data-model-label="slabThickness"></span><input id="floor-slab" type="number" min="0" max="5" step="0.05"></label>
+            <small id="floor-elevation"></small>
+            <label class="hierarchy-check"><input id="surface-enabled" type="checkbox"><span data-model-label="floorSurface"></span></label>
+            <label><span data-model-label="floorMaterial"></span><select id="surface-material"><option value="solid" data-model-label="floor_solid"></option><option value="wood" data-model-label="floor_wood"></option><option value="tile" data-model-label="floor_tile"></option><option value="concrete" data-model-label="floor_concrete"></option><option value="grass" data-model-label="floor_grass"></option></select></label>
+            <label><span data-model-label="color"></span><input id="surface-color" type="color"></label>
+            <small data-model-label="surfaceHelp"></small>
+
+          </div></details>
+        </div>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="view-mode-switch" role="group" aria-label="Modo de visualização">
+          <button id="btn-view-2d" class="active" type="button" aria-pressed="true">2D</button>
+          <button id="btn-view-3d" type="button" aria-pressed="false">3D</button>
         </div>
         <button id="settings-toggle" class="settings-toggle" type="button" title="Configurações" aria-label="Configurações">⚙</button>
         <button id="theme-toggle" class="theme-toggle" title="Ativar modo escuro" aria-label="Ativar modo escuro" aria-pressed="false">
@@ -175,6 +199,7 @@
             <span id="viewer3d-selection" class="viewer3d-selection">Nenhum objeto selecionado</span>
           </div>
           <div class="viewer3d-actions">
+            <div class="viewer-floor-controls"><select id="viewer-floor-visibility" data-model-title="floors"><option value="all" data-model-label="allFloors">Todos os andares</option><option value="active" data-model-label="floorOnly">Somente andar ativo</option></select></div>
             <button id="viewer3d-hide-front" type="button" aria-pressed="false">Ocultar frente</button>
             <button id="viewer3d-reset" type="button">Recentralizar</button>
           </div>
@@ -224,7 +249,7 @@
         <label class="export-mode"><input type="radio" name="export-mode" value="dark"><span class="export-card"><span class="export-preview dark-preview"><i></i><i></i><i></i></span><strong>Modo escuro</strong><small>Fundo escuro usando a versão noturna da paleta.</small></span></label>
         <label class="export-mode"><input type="radio" name="export-mode" value="blueprint"><span class="export-card"><span class="export-preview blueprint-preview"><i></i><i></i><i></i></span><strong>Blueprint</strong><small>Fundo azul e medidas em todas as paredes.</small></span></label>
       </div>
-      <div class="dialog-actions"><button class="btn-secondary" id="export-svg">Baixar SVG</button><button class="btn-secondary" id="export-3d-html">Visualização 3D (.html)</button><button class="btn-secondary" id="export-3d">Baixar 3D (OBJ + MTL)</button><button class="btn-primary" id="export-png">Baixar PNG</button></div>
+      <div class="dialog-actions"><button class="btn-secondary" id="export-file" data-model-label="exportFile">Baixar arquivo VisualMaker</button><button class="btn-secondary" id="export-svg">Baixar SVG</button><button class="btn-secondary" id="export-3d-html">Visualização 3D (.html)</button><button class="btn-secondary" id="export-3d">Baixar 3D (OBJ + MTL)</button><button class="btn-primary" id="export-png">Baixar PNG</button></div>
     </div>
   </div>
 
@@ -249,6 +274,11 @@
 
 </div>
 
+<dialog id="hierarchy-confirm" aria-labelledby="hierarchy-confirm-message">
+  <p id="hierarchy-confirm-message"></p>
+  <div class="dialog-actions"><button id="hierarchy-cancel" class="btn-secondary" data-model-label="cancel">Cancelar</button><button id="hierarchy-delete" class="btn-danger" data-model-label="delete">Excluir</button></div>
+</dialog>
+<script src="model.js"></script>
 <script src="geometry.js"></script>
 <script src="elements.js"></script>
 <script src="render.js"></script>
