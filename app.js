@@ -23,6 +23,7 @@ const TRANSLATIONS = {
     undo:'Desfazer', redo:'Refazer', viewMode:'Modo de visualização', blueprintMode:'Modo Blueprint',
     blueprintTitle:'Exibir todas as medidas das paredes', save:'Salvar', saveChanges:'Salvar alterações', saved:'Salvo', export:'Exportar',
     construction:'Construção', select:'Selecionar', wall:'Parede', door:'Porta', window:'Janela', room:'Cômodo',
+    stair:'Escada',startFloor:'Andar inicial',endFloor:'Andar final',stepCount:'Número de degraus',riserHeight:'Altura por degrau (m)',stairType:'Tipo',straightStair:'Reta',uStair:'Em U com patamar',direction:'Direção (°)',stairDraft:'Selecione um andar superior para conectar a escada.',noDestination:'Sem destino',stairUp:'SOBE',stairDown:'DESCE',stairRiseHelp:'Altura calculada entre os pisos. A largura corresponde a cada lance.',
     dimension:'Cota', text:'Texto', library:'Biblioteca', libraryCategories:'Categorias da biblioteca', colorPalette:'Paleta de cores', canvas3DLabel:'Visualização 3D da planta',
     interior:'Interior', outdoor:'Quintal', structures:'Estruturas', projectStyle:'Estilo do projeto',
     paletteTechnical:'Técnico', paletteNatural:'Natural', paletteCoastal:'Litoral', paletteMono:'Monocromático',
@@ -33,11 +34,11 @@ const TRANSLATIONS = {
     doorType:'Tipo de porta', doorSwing:'De giro', doorSliding:'De correr', hingeSide:'Dobradiça', hingeLeft:'Esquerda', hingeRight:'Direita', flipSwing:'Inverter abertura',
     windowType:'Tipo de janela', windowSliding:'De correr', windowFixed:'Fixa', windowAwning:'Basculante', flipWindow:'Inverter sentido',
     editable3d:'3D editável',
-    editable3dHelp:'Clique em móveis, portas ou janelas · arraste para mover · handles das aberturas alteram a largura · Alt ignora snap dos móveis',
+    editable3dHelp:'Use as ferramentas para criar no andar ativo · arraste para mover · pontos azuis redimensionam · botão direito orbita',
     noObjectSelected:'Nenhum elemento 3D selecionado', object:'Objeto', wallAttached:'presa à parede', hideFront:'Ocultar frente', showFront:'Mostrar frente', recenter:'Recentralizar',
     emptyHint:'Escolha a ferramenta <strong>Parede</strong> e clique no canvas para começar a desenhar.',
     typeText:'Digite o texto', normalEdit:'Edição normal', view3d:'Visualização 3D', fit:'Ajustar',
-    statusHelp:'Shift + R rotaciona · Ctrl + rolagem amplia', status3dHelp:'Clique: selecionar · arraste para mover · handles de portas/janelas: largura · botão direito: orbitar · WASD/setas: câmera · H: ocultar frente',
+    statusHelp:'Shift + R rotaciona · Ctrl + rolagem amplia', status3dHelp:'Shift + clique: seleção múltipla · Shift + R: girar · setas: câmera · botão direito: orbitar · H: ocultar frente',
     finishProject:'Finalizar projeto', exportPlan:'Exportar planta',
     exportDescription:'Escolha a apresentação. O arquivo será gerado em alta resolução, pronto para compartilhar ou imprimir.',
     lightMode:'Modo claro', lightModeDesc:'Fundo claro usando a paleta de cores atual.',
@@ -101,6 +102,7 @@ const TRANSLATIONS = {
     undo:'Undo', redo:'Redo', viewMode:'View mode', blueprintMode:'Blueprint Mode',
     blueprintTitle:'Show all wall measurements', save:'Save', saveChanges:'Save changes', saved:'Saved', export:'Export',
     construction:'Construction', select:'Select', wall:'Wall', door:'Door', window:'Window', room:'Room',
+    stair:'Stair',startFloor:'Start floor',endFloor:'End floor',stepCount:'Number of risers',riserHeight:'Riser height (m)',stairType:'Type',straightStair:'Straight',uStair:'U-shaped with landing',direction:'Direction (°)',stairDraft:'Select an upper floor to connect the stair.',noDestination:'No destination',stairUp:'UP',stairDown:'DOWN',stairRiseHelp:'Height follows the floor levels. Width is per flight.',
     dimension:'Dimension', text:'Text', library:'Library', libraryCategories:'Library categories', colorPalette:'Color palette', canvas3DLabel:'3D floor plan view',
     interior:'Interior', outdoor:'Outdoor', structures:'Structures', projectStyle:'Project style',
     paletteTechnical:'Technical', paletteNatural:'Natural', paletteCoastal:'Coastal', paletteMono:'Monochrome',
@@ -111,11 +113,11 @@ const TRANSLATIONS = {
     doorType:'Door type', doorSwing:'Swing', doorSliding:'Sliding', hingeSide:'Hinge', hingeLeft:'Left', hingeRight:'Right', flipSwing:'Flip swing',
     windowType:'Window type', windowSliding:'Sliding', windowFixed:'Fixed', windowAwning:'Awning', flipWindow:'Flip direction',
     editable3d:'Editable 3D',
-    editable3dHelp:'Click furniture, doors, or windows · drag to move · opening handles resize width · Alt ignores furniture snap',
+    editable3dHelp:'Use tools to create on the active floor · drag to move · blue points resize · right button orbits',
     noObjectSelected:'No 3D element selected', object:'Object', wallAttached:'attached to wall', hideFront:'Hide front', showFront:'Show front', recenter:'Recenter',
     emptyHint:'Choose the <strong>Wall</strong> tool and click the canvas to start drawing.',
     typeText:'Type text', normalEdit:'Normal editing', view3d:'3D View', fit:'Fit',
-    statusHelp:'Shift + R rotates · Ctrl + scroll zooms', status3dHelp:'Click: select · drag to move · door/window handles: width · right button: orbit · WASD/arrows: camera · H: hide front',
+    statusHelp:'Shift + R rotates · Ctrl + scroll zooms', status3dHelp:'Shift + click: multi-select · Shift + R: rotate · arrows: camera · right button: orbit · H: hide front',
     finishProject:'Finish project', exportPlan:'Export floor plan',
     exportDescription:'Choose the presentation style. The file will be generated in high resolution, ready to share or print.',
     lightMode:'Light mode', lightModeDesc:'Light background using the current color palette.',
@@ -174,7 +176,10 @@ Object.assign(TRANSLATIONS['pt-BR'], {
   cancel:'Cancelar',
   projects:'Projetos',project:'Projeto',projectName:'Nome do projeto',renameProject:'Renomear projeto',duplicateProject:'Duplicar projeto',copy:'cópia',
   deleteBoardConfirm:'Excluir o projeto "{name}" e todos os seus andares?',baseElevation:'Cota de base',floorHeight:'Altura do andar (m)',slabThickness:'Laje (m)',
-  floorSurface:'Piso do andar',ghostFloors:'Referência dos outros andares',
+  floorSurface:'Piso do andar',ghostFloors:'Mostrar andares inferiores (2D)',topView:'Vista superior',annotations:'Anotações',
+  viewPerson:'Ver como pessoa',leavePerson:'Sair do passeio',personHelp:'WASD ou setas: andar · Shift: acelerar · Arraste para olhar · Esc: sair',
+  eyeHeight:'Altura dos olhos (m)',fieldOfView:'Campo de visão (°)',
+  walkControls:'Controles do passeio',walkLeft:'Andar para a esquerda',walkForward:'Andar para a frente',walkBack:'Andar para trás',walkRight:'Andar para a direita',
   importFile:'Abrir arquivo VisualMaker',exportFile:'Baixar arquivo VisualMaker',invalidFile:'Arquivo VisualMaker inválido ou de uma versão não suportada.',allFloors:'Todos os andares',floorOnly:'Somente andar ativo',surfaceHelp:'O piso usa o retângulo que envolve paredes e cômodos.'
 });
 Object.assign(TRANSLATIONS.en, {
@@ -182,7 +187,10 @@ Object.assign(TRANSLATIONS.en, {
   cancel:'Cancel',
   projects:'Projects',project:'Project',projectName:'Project name',renameProject:'Rename project',duplicateProject:'Duplicate project',copy:'copy',
   deleteBoardConfirm:'Delete project "{name}" and all its floors?',baseElevation:'Base elevation',floorHeight:'Floor height (m)',slabThickness:'Slab (m)',
-  floorSurface:'Storey floor',ghostFloors:'Reference other floors',
+  floorSurface:'Storey floor',ghostFloors:'Show lower floors (2D)',topView:'Top view',annotations:'Annotations',
+  viewPerson:'Walk inside',leavePerson:'Exit walk',personHelp:'WASD or arrows: walk · Shift: faster · Drag to look · Esc: exit',
+  eyeHeight:'Eye height (m)',fieldOfView:'Field of view (°)',
+  walkControls:'Walking controls',walkLeft:'Walk left',walkForward:'Walk forward',walkBack:'Walk backward',walkRight:'Walk right',
   importFile:'Open VisualMaker file',exportFile:'Download VisualMaker file',invalidFile:'Invalid VisualMaker file or unsupported version.',allFloors:'All floors',floorOnly:'Active floor only',surfaceHelp:'The floor follows the bounding rectangle of walls and rooms.'
 });
 
@@ -276,7 +284,7 @@ function applyStaticTranslations(){
   setText('.blueprint-switch > span:last-child','blueprintMode');
   setText('#btn-export span','export');
 
-  const staticTools={select:'select',wall:'wall',door:'door',window:'window',room:'room',cota:'dimension',text:'text'};
+  const staticTools={select:'select',wall:'wall',door:'door',window:'window',room:'room',stair:'stair',cota:'dimension',text:'text'};
   Object.entries(staticTools).forEach(([toolName,key])=>{
     const btn=document.querySelector(`.tool-btn[data-tool="${toolName}"]`);
     if(!btn)return;
@@ -663,6 +671,7 @@ function deleteActiveFloor(){
   confirmHierarchyDelete(t('deleteFloorConfirm',{name:floorDisplayName(floor,index)}),()=>{
     finishContextEditing();state.floors.splice(index,1);
     state.activeFloorId=state.floors[Math.max(0,index-1)].id;
+    VisualMakerModel.syncStairs(activeProject());
     refreshContext();pushHistory();
   });
 }
@@ -800,7 +809,7 @@ function rotateCurrentSelection(deltaDeg){
       const center=rotatePointAround({x:el.x+el.w/2,y:el.y+el.h/2},cx,cy,r);el.x=center.x-el.w/2;el.y=center.y-el.h/2;
     }else if('x' in el){
       const p=rotatePointAround({x:el.x,y:el.y},cx,cy,r);el.x=p.x;el.y=p.y;
-      if(el.type==='object'||el.type==='text')el.rotation=((el.rotation||0)+deltaDeg)%360;
+      if(el.type==='object'||el.type==='text'||el.type==='stair')el.rotation=((el.rotation||0)+deltaDeg)%360;
       if((el.type==='door'||el.type==='window')&&!el.wallId)el.angle=((el.angle||0)+deltaDeg)%360;
     }
   }
@@ -827,7 +836,36 @@ function updatePropertiesPanel(){
   if (!el){ panel.classList.add('hidden'); panel.innerHTML=''; return; }
   panel.classList.remove('hidden');
 
-  if (el.type==='wall'){
+  if (el.type==='stair'){
+    VisualMakerModel.syncStairs(activeProject());
+    const g=VisualMakerModel.stairGeometry(el,activeProject());
+    const options=(selected,onlyUpper)=>state.floors.map((f,i)=>!onlyUpper||i>g.start.index?`<option value="${escapeAttr(f.id)}" ${f.id===selected?'selected':''}>${escapeXML(floorDisplayName(f,i))}</option>`:'').join('');
+    panel.innerHTML=`<div class="prop-header">${t('stair')}</div>
+      <label>${t('startFloor')}<select id="prop-stair-start">${options(el.floorId,false)}</select></label>
+      <label>${t('endFloor')}<select id="prop-stair-end"><option value="">${t('noDestination')}</option>${options(el.endFloorId,true)}</select></label>
+      <label>${t('stairType')}<select id="prop-stair-type"><option value="straight" ${el.stairType==='straight'?'selected':''}>${t('straightStair')}</option><option value="u" ${el.stairType==='u'?'selected':''}>${t('uStair')}</option></select></label>
+      <label>${t('width')}<input id="prop-stair-width" type="number" min="0.3" step="0.05" value="${el.width}"></label>
+      <label>${t('length')}<input id="prop-stair-length" type="number" min="0.5" step="0.05" value="${el.length}"></label>
+      <label>${t('stepCount')}<input id="prop-stair-count" type="number" min="2" max="200" step="1" value="${el.stepCount}"></label>
+      <label>${t('riserHeight')}<input type="text" value="${g.valid?g.riserHeight.toFixed(4):'—'}" readonly></label>
+      <label>${t('direction')}<input id="prop-stair-direction" type="number" step="15" value="${el.rotation}"></label>
+      <label>${t('color')}<input id="prop-stair-color" type="color" value="${el.color||'#C6B49A'}"></label>
+      <p>${t(g.valid?'stairRiseHelp':'stairDraft')}</p>
+      <div class="prop-actions"><button id="prop-mirror" class="btn-secondary">${t('mirror')}</button><button id="prop-duplicate" class="btn-secondary">${t('duplicate')}</button><button id="prop-delete" class="btn-danger">${t('delete')}</button></div>`;
+    const commit=()=>{VisualMakerModel.syncStairs(activeProject());pushHistory();render();updatePropertiesPanel();};
+    document.getElementById('prop-stair-start').addEventListener('change',event=>{
+      const target=state.floors.find(f=>f.id===event.target.value);if(!target)return;
+      state.elements=state.elements.filter(e=>e.id!==el.id);target.elements.push(el);
+      el.floorId=el.startFloorId=target.id;state.activeFloorId=target.id;refreshContext();setSingleSelection(el.id);commit();
+    });
+    document.getElementById('prop-stair-end').addEventListener('change',event=>{el.endFloorId=event.target.value||null;commit();});
+    document.getElementById('prop-stair-type').addEventListener('change',event=>{el.stairType=event.target.value;commit();});
+    for(const [suffix,key,min,max] of [['width','width',.3,100],['length','length',.5,1000],['count','stepCount',2,200],['direction','rotation',-36000,36000]]){
+      const input=document.getElementById('prop-stair-'+suffix);
+      input.addEventListener('change',()=>{const value=Number(input.value);if(input.value!==''&&Number.isFinite(value)&&value>=min&&value<=max)el[key]=value;commit();});bindEnterBlur(input);
+    }
+    document.getElementById('prop-stair-color').addEventListener('change',event=>{el.color=event.target.value;commit();});
+  } else if (el.type==='wall'){
     const length = Math.hypot(el.x2-el.x1, el.y2-el.y1);
     let angle = Math.round(Math.atan2(el.y2-el.y1, el.x2-el.x1)*180/Math.PI);
     if (angle<0) angle += 360;
@@ -984,6 +1022,7 @@ function updatePropertiesPanel(){
       <div class="prop-subheader">${t('sizeAppearance')}</div>
       <label>${t('width')}<input id="prop-object-w" type="text" value="${escapeAttr(formatMeters(el.w))}"></label>
       <label>${t('depth')}<input id="prop-object-h" type="text" value="${escapeAttr(formatMeters(el.h))}"></label>
+      <label>${t('height3d')}<input id="prop-object-height" type="text" value="${escapeAttr(formatMeters(VisualMakerModel.objectHeight(el,activeFloor())))}"></label>
       <label>${t('color')}<input id="prop-color" type="color" value="${el.color||getPalette().object}"></label>
       <div class="prop-actions"><button id="prop-mirror" class="btn-secondary">${t('mirror')}</button><button id="prop-duplicate" class="btn-secondary">${t('duplicate')}</button></div>
       <div class="prop-actions"><button id="prop-delete" class="btn-danger">${t('delete')}</button></div>`;
@@ -1012,6 +1051,8 @@ function updatePropertiesPanel(){
     });
 
     const ow=document.getElementById('prop-object-w'),oh=document.getElementById('prop-object-h');
+    const objectHeightInput=document.getElementById('prop-object-height');
+    objectHeightInput.addEventListener('change',()=>{const v=parseMeters(objectHeightInput.value);if(v>=.05&&v<=30){el.height=v;pushHistory();render();updatePropertiesPanel();}});bindEnterBlur(objectHeightInput);
     ow.addEventListener('change',()=>{const v=parseMeters(ow.value);if(v>.1){el.w=v;pushHistory();render();updatePropertiesPanel();}}); bindEnterBlur(ow);
     oh.addEventListener('change',()=>{const v=parseMeters(oh.value);if(v>.1){el.h=v;pushHistory();render();updatePropertiesPanel();}}); bindEnterBlur(oh);
     const oc=document.getElementById('prop-color');oc.addEventListener('input',()=>{el.color=oc.value;render();});oc.addEventListener('change',()=>pushHistory());
@@ -1048,7 +1089,8 @@ function updatePropertiesPanel(){
 function openTextEditor(worldX, worldY, existingId){
   const overlay = document.getElementById('text-editor-overlay');
   const input = document.getElementById('text-editor-input');
-  const screenPt = toScreen(worldX, worldY);
+  const screenPt = document.body.classList.contains('view-3d')&&window.editor3DPoint?window.editor3DPoint(worldX,worldY):toScreen(worldX,worldY);
+  if(!screenPt)return;
   overlay.style.left = screenPt.x+'px';
   overlay.style.top = (screenPt.y-14)+'px';
   overlay.classList.remove('hidden');
@@ -1102,10 +1144,10 @@ function zoomBy(factor){
 function fitView(){
   const wrap = document.getElementById('canvas-wrap');
   const cw = wrap.clientWidth, ch = wrap.clientHeight;
-  if ((typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements).length===0){
+  if ((typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements).length===0&&!incomingStairs().length&&!VisualMakerModel.referenceFloors(activeProject()).some(f=>f.elements.length)){
     view.pxPerMeter=60; view.panX=cw/2-2.5*60; view.panY=ch/2-2.5*60; return;
   }
-  const b = computeContentBBox();
+  const b = computeContentBBox(true);
   const bw = Math.max(0.5,b.maxX-b.minX), bh = Math.max(0.5,b.maxY-b.minY);
   const scaleX = (cw-140)/bw, scaleY = (ch-140)/bh;
   view.pxPerMeter = Math.max(8, Math.min(scaleX, scaleY, 200));
@@ -1127,9 +1169,11 @@ function updateToolButtons(){
   });
   document.querySelectorAll('.asset-btn').forEach(btn=>btn.classList.toggle('active',tool==='object'&&btn.dataset.kind===selectedAssetKind));
   svgEl.style.cursor = tool==='select' ? 'default' : 'crosshair';
+  document.getElementById('canvas-3d').style.cursor=tool==='select'?'default':'crosshair';
 }
 function clearDrafts(){ wallDraft=null; cotaDraft=null; roomDraft=null; clearSmartGuides(); }
 function activateTool(nextTool){
+  window.leavePersonView?.();
   tool=nextTool; selectedAssetKind=null; clearDrafts(); updateToolButtons(); render();
 }
 document.querySelectorAll('.tool-btn[data-tool]').forEach(btn=>{
@@ -1169,7 +1213,7 @@ function renderAssetLibrary(category){
   assetLibrary.filter(a=>a.category===category).forEach(asset=>{
     const btn=document.createElement('button');btn.className='asset-btn';btn.dataset.kind=asset.kind;btn.title=t('addAsset',{name:getAssetLabel(asset.kind,asset.category,asset.label)});
     btn.innerHTML=assetIcon(asset.kind)+`<span>${escapeHTML(getAssetLabel(asset.kind,asset.category,asset.label))}</span>`;
-    btn.addEventListener('click',()=>{selectedAssetKind=asset.kind;selectedAssetCategory=asset.category;selectedAssetLabel=asset.label;tool='object';clearDrafts();updateToolButtons();});
+    btn.addEventListener('click',()=>{window.leavePersonView?.();selectedAssetKind=asset.kind;selectedAssetCategory=asset.category;selectedAssetLabel=asset.label;tool='object';clearDrafts();updateToolButtons();render();});
     grid.appendChild(btn);
   });
   updateToolButtons();
@@ -1223,7 +1267,7 @@ for(const id of ['floor-height','floor-slab','surface-enabled','surface-material
     if(id==='surface-enabled')f.floorSurface.enabled=input.checked;
     if(id==='surface-material'){f.floorSurface.material=input.value;f.floorSurface.color=null;}
     if(id==='surface-color')f.floorSurface.color=input.value;
-    if(id==='floor-ghost')p.settings.ghostFloors=input.checked;
+    if(id==='floor-ghost'){p.settings.ghostFloors=input.checked;if(input.checked){fitView();updateZoomLabel();}}
     updateFloorControls();pushHistory();render();
   });
 }
@@ -1231,10 +1275,9 @@ updateFloorControls();
 
 /* ===== Interação no canvas ===== */
 svgEl.addEventListener('selectstart',e=>e.preventDefault());
-svgEl.addEventListener('mousedown', (e)=>{
-  const rect = svgEl.getBoundingClientRect();
-  const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
-  const worldPt = toWorld(sx,sy);
+// Shared world-space editing; both viewports supply coordinates and hit results.
+function editorPointerDown(e,worldPt,hitOverride){
+  const {x:sx,y:sy}=toScreen(worldPt.x,worldPt.y);
 
   if (tool==='wall'){
     const snapped = snapPoint(worldPt.x, worldPt.y);
@@ -1286,6 +1329,10 @@ svgEl.addEventListener('mousedown', (e)=>{
     openTextEditor(worldPt.x, worldPt.y);
     return;
   }
+  if (tool==='stair'){
+    const snapped=snapPoint(worldPt.x,worldPt.y),newEl=addStair(snapped.x,snapped.y);
+    addMirroredCopiesFor(newEl);setSingleSelection(newEl.id);pushHistory();tool='select';updateToolButtons();render();updatePropertiesPanel();return;
+  }
   if (tool==='object'){
     const asset=assetLibrary.find(a=>a.kind===selectedAssetKind&&a.category===selectedAssetCategory) || assetLibrary.find(a=>a.kind===selectedAssetKind);
     if(asset){const snapped=snapPoint(worldPt.x,worldPt.y);const newEl=addObject(snapped.x,snapped.y,asset.kind,selectedAssetLabel,asset.category,asset.w,asset.h);newEl.elevation=asset.elevation||0;if(!e.altKey&&typeof snapObjectIntoNearbyCorner==='function')snapObjectIntoNearbyCorner(newEl,.28);selectedId=newEl.id;pushHistory();updatePropertiesPanel();render();}
@@ -1294,12 +1341,12 @@ svgEl.addEventListener('mousedown', (e)=>{
 
   // ferramenta Selecionar
   clearSmartGuides();
-  const axisHit = hitTestMirrorAxis(sx,sy);
+  const axisHit = hitOverride===undefined?hitTestMirrorAxis(sx,sy):hitOverride?.axis;
   if (axisHit && !e.shiftKey){
     dragInfo = { mode:'mirror-axis', axis:axisHit };
     return;
   }
-  const hit = hitTest(sx,sy);
+  const hit = hitOverride===undefined?hitTest(sx,sy):hitOverride;
   if (hit){
     if(e.shiftKey && !hit.handle){
       toggleSelection(hit.id);
@@ -1344,12 +1391,11 @@ svgEl.addEventListener('mousedown', (e)=>{
   }
   updatePropertiesPanel();
   render();
-});
+}
+svgEl.addEventListener('mousedown',e=>{const r=svgEl.getBoundingClientRect();editorPointerDown(e,toWorld(e.clientX-r.left,e.clientY-r.top));});
 
-svgEl.addEventListener('mousemove', (e)=>{
-  const rect = svgEl.getBoundingClientRect();
-  const sx = e.clientX-rect.left, sy = e.clientY-rect.top;
-  const worldPt = toWorld(sx,sy);
+function editorPointerMove(e,worldPt){
+  const {x:sx,y:sy}=toScreen(worldPt.x,worldPt.y);
 
   if (tool==='wall' && wallDraft){ wallDraft.previewPoint = snapPoint(worldPt.x, worldPt.y); render(); return; }
   if (tool==='cota' && cotaDraft){ cotaDraft.previewPoint = snapPoint(worldPt.x, worldPt.y); render(); return; }
@@ -1444,9 +1490,10 @@ svgEl.addEventListener('mousemove', (e)=>{
     }
     render();
   }
-});
+}
+svgEl.addEventListener('mousemove',e=>{const r=svgEl.getBoundingClientRect();editorPointerMove(e,toWorld(e.clientX-r.left,e.clientY-r.top));});
 
-window.addEventListener('mouseup', ()=>{
+function editorPointerUp(){
   if (tool==='room' && roomDraft){
     const x=Math.min(roomDraft.startX,roomDraft.curX), y=Math.min(roomDraft.startY,roomDraft.curY);
     const w=Math.abs(roomDraft.curX-roomDraft.startX), h=Math.abs(roomDraft.curY-roomDraft.startY);
@@ -1465,7 +1512,8 @@ window.addEventListener('mouseup', ()=>{
   dragInfo = null;
   clearSmartGuides();
   render();
-});
+}
+window.addEventListener('mouseup',()=>{if(!document.body.classList.contains('view-3d'))editorPointerUp();});
 
 svgEl.addEventListener('dblclick', (e)=>{
   if (tool!=='select') return;
@@ -1504,7 +1552,7 @@ window.addEventListener('keydown', (e)=>{
   const reloadShortcut=e.key==='F5'||((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='r');
   if(reloadShortcut&&unsavedChanges){e.preventDefault();closeExportModal();openUnsavedDialog('reload');return;}
   const activeTag = document.activeElement.tagName;
-  if (activeTag==='INPUT' || activeTag==='TEXTAREA'){
+  if (activeTag==='INPUT' || activeTag==='TEXTAREA' || activeTag==='SELECT'){
     if (e.key==='Escape') document.activeElement.blur();
     return;
   }
@@ -1518,7 +1566,7 @@ window.addEventListener('keydown', (e)=>{
   else if (e.key==='Delete' || e.key==='Backspace'){ if (selectedId){ e.preventDefault(); deleteCurrentSelection(); } }
   else if (e.shiftKey && e.key.toLowerCase()==='r'){ if (selectedId) rotateCurrentSelection(90); }
   else if (!mod && !e.altKey){
-    const shortcutTools={q:'select',w:'wall',e:'door',r:'window',t:'room',y:'cota',u:'text'};
+    const shortcutTools={q:'select',w:'wall',e:'door',r:'window',t:'room',y:'stair',u:'cota',i:'text'};
     const nextTool=shortcutTools[e.key.toLowerCase()];
     if(nextTool){e.preventDefault();activateTool(nextTool);}
     else if (e.key==='Escape'){ activateTool('select'); }
@@ -1670,6 +1718,9 @@ function buildExportSVG(bbox, pad, ppm, mode){
       else if(el.windowStyle==='awning'){const side=Number(el.windowSide)===-1?-1:1;parts.push(`<path d="M ${-wpx*.42} 0 L 0 ${-side*Math.max(8,wpx*.18)} L ${wpx*.42} 0" fill="none" stroke="${muted}" stroke-width="1.3"/>`);}
     }
     parts.push('</g>');
+  }
+  for(const el of [...exportElements.filter(e=>e.type==='stair'),...incomingStairs()]){
+    parts.push(stairSVG(el,activeProject(),(x,y)=>({x:(x+ox)*ppm,y:(y+oy)*ppm}),objectStroke,objectFill,el.floorId!==activeFloorId()));
   }
   for(const el of exportElements.filter(e=>e.type==='object')){
     const x=(el.x+ox)*ppm,y=(el.y+oy)*ppm,ww=(el.w||1)*ppm,hh=(el.h||1)*ppm;

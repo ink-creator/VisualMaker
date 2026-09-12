@@ -145,13 +145,17 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16"/></svg>
             <span>Cômodo</span><kbd>T</kbd>
           </button>
-          <button class="tool-btn" data-tool="cota" title="Cota (Y)">
-            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="8" x2="3" y2="16"/><line x1="21" y1="8" x2="21" y2="16"/></svg>
-            <span>Cota</span><kbd>Y</kbd>
+          <button class="tool-btn" data-tool="stair" title="Escada (Y)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 21V16H8V11H13V6H18V2M3 21H22M7 4L20 17M16 17H20V13"/></svg>
+            <span>Escada</span><kbd>Y</kbd>
           </button>
-          <button class="tool-btn" data-tool="text" title="Texto (U)">
+          <button class="tool-btn" data-tool="cota" title="Cota (U)">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="8" x2="3" y2="16"/><line x1="21" y1="8" x2="21" y2="16"/></svg>
+            <span>Cota</span><kbd>U</kbd>
+          </button>
+          <button class="tool-btn" data-tool="text" title="Texto (I)">
             <svg viewBox="0 0 24 24"><path d="M4 5h16v3.2h-6.3V19h-3.4V8.2H4z" fill="currentColor"/></svg>
-            <span>Texto</span><kbd>U</kbd>
+            <span>Texto</span><kbd>I</kbd>
           </button>
         </div>
         <div class="sidebar-divider"></div>
@@ -192,16 +196,30 @@
       <div class="canvas-wrap" id="canvas-wrap">
         <svg id="svg-canvas"></svg>
         <canvas id="canvas-3d" class="hidden" aria-label="Visualização 3D da planta"></canvas>
+        <svg id="annotations-3d" class="annotations-3d hidden" aria-hidden="true"></svg>
+        <div class="walk-controls" data-model-title="walkControls">
+          <button data-walk-key="a" data-model-title="walkLeft" aria-label="Andar para a esquerda">←</button>
+          <button data-walk-key="w" data-model-title="walkForward" aria-label="Andar para a frente">↑</button>
+          <button data-walk-key="s" data-model-title="walkBack" aria-label="Andar para trás">↓</button>
+          <button data-walk-key="d" data-model-title="walkRight" aria-label="Andar para a direita">→</button>
+        </div>
         <div class="viewer3d-help hidden" id="viewer3d-help">
           <div>
             <strong>3D editável</strong>
             <span>Clique no móvel · arraste para mover · seta vertical muda altura · anel gira · Alt ignora snap</span>
             <span id="viewer3d-selection" class="viewer3d-selection">Nenhum objeto selecionado</span>
+            <span id="viewer3d-walk-help">WASD ou setas: andar · Shift: acelerar · Arraste para olhar · Esc: sair</span>
+            <div class="person-settings">
+              <label><span data-model-label="eyeHeight">Altura dos olhos (m)</span><input id="person-eye-height" aria-label="Altura dos olhos (m)" type="number" min="1.2" max="1.95" step=".05" value="1.65"></label>
+              <label><span data-model-label="fieldOfView">Campo de visão (°)</span><input id="person-fov" aria-label="Campo de visão (°)" type="number" min="55" max="95" step="1" value="70"></label>
+            </div>
           </div>
           <div class="viewer3d-actions">
             <div class="viewer-floor-controls"><select id="viewer-floor-visibility" data-model-title="floors"><option value="all" data-model-label="allFloors">Todos os andares</option><option value="active" data-model-label="floorOnly">Somente andar ativo</option></select></div>
             <button id="viewer3d-hide-front" type="button" aria-pressed="false">Ocultar frente</button>
             <button id="viewer3d-reset" type="button">Recentralizar</button>
+            <button id="viewer3d-top" type="button" data-model-label="topView">Vista superior</button>
+            <button id="viewer3d-person" type="button" aria-pressed="false">Ver como pessoa</button>
           </div>
         </div>
         <div class="empty-hint hidden" id="empty-hint">

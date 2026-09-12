@@ -3,6 +3,33 @@
    cotas, textos, seleção, eixo de espelho) e detecção de clique
    (hit-test) sobre os elementos. */
 
+// Shared architecture symbol for the editor and SVG/PNG export.
+function stairSVG(el,project,point,stroke,fill,down=false){
+  const g=VisualMakerModel.stairGeometry(el,project),xy=p=>{const s=point(p.x,p.y);return `${s.x},${s.y}`;};
+  const polygon=(points,extra='')=>`<polygon points="${points.map(xy).join(' ')}" ${extra}/>`;
+  let out=`<g data-stair="${escapeAttr(el.id)}" stroke="${stroke}" stroke-width="1" fill="none">`;
+  out+=polygon(g.outline,`fill="${fill}" fill-opacity=".8"`);
+  for(const step of g.steps){
+    const points=[[-step.w/2,-step.h/2],[step.w/2,-step.h/2],[step.w/2,step.h/2],[-step.w/2,step.h/2]].map(([x,y])=>g.world(x+step.x,y+step.y));
+    out+=polygon(points,!down&&step.z>1.2?'stroke-dasharray="5 3"':'');
+  }
+  const path=down?[...g.path].reverse():g.path;
+  out+=`<polyline points="${path.map(xy).join(' ')}" stroke-width="2"/>`;
+  const a=point(path[path.length-2].x,path[path.length-2].y),b=point(path[path.length-1].x,path[path.length-1].y),angle=Math.atan2(b.y-a.y,b.x-a.x);
+  out+=`<path d="M${b.x-9*Math.cos(angle-.5)} ${b.y-9*Math.sin(angle-.5)}L${b.x} ${b.y}L${b.x-9*Math.cos(angle+.5)} ${b.y-9*Math.sin(angle+.5)}" stroke-width="2"/>`;
+  if(!down){const cutY=-g.h/2+Math.min(.48,1.2/(g.rise||2.7))*g.h;
+    const cut=[[-g.w/2-.08,cutY+.09],[0,cutY-.09],[0,cutY+.09],[g.w/2+.08,cutY-.09]].map(([x,y])=>g.world(x,y));
+    out+=`<polyline points="${cut.map(xy).join(' ')}" stroke-width="2"/>`;
+  }
+  const label=point(el.x,el.y);
+  out+=`<text x="${label.x}" y="${label.y-8}" text-anchor="middle" font-size="10" font-family="sans-serif" stroke="${fill}" stroke-width="3" paint-order="stroke" fill="${stroke}">${escapeXML(g.valid?t(down?'stairDown':'stairUp'):t('noDestination'))}</text></g>`;
+  return out;
+}
+function drawStair(layer,el,down=false){
+  const g=document.createElementNS(svgNS,'g');
+  g.innerHTML=stairSVG(el,activeProject(),toScreen,'var(--object-stroke)','var(--object-fill)',down);layer.appendChild(g);
+}
+
 function makeLine(x1,y1,x2,y2,color,width){
   const l = document.createElementNS(svgNS,'line');
   l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
@@ -320,6 +347,10 @@ function drawSelection(layer, el, showHandles=true){
     const length = Math.hypot(el.x2-el.x1, el.y2-el.y1);
     const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
     if(showHandles){layer.appendChild(makeLabel(mx,my-12,formatMeters(length)));layer.appendChild(makeHandle(p1.x,p1.y));layer.appendChild(makeHandle(p2.x,p2.y));}
+  } else if (el.type==='stair'){
+    const outline=document.createElementNS(svgNS,'polygon');
+    outline.setAttribute('points',VisualMakerModel.stairGeometry(el,activeProject()).outline.map(p=>{const s=toScreen(p.x,p.y);return `${s.x},${s.y}`;}).join(' '));
+    outline.setAttribute('fill','none');outline.setAttribute('stroke','var(--accent)');outline.setAttribute('stroke-width','3');layer.appendChild(outline);
   } else if (el.type==='object'){
     const p=toScreen(el.x,el.y),w=(el.w||1)*view.pxPerMeter,h=(el.h||1)*view.pxPerMeter;
     const outline=document.createElementNS(svgNS,'rect'); outline.setAttribute('x',p.x-w/2-4);outline.setAttribute('y',p.y-h/2-4);outline.setAttribute('width',w+8);outline.setAttribute('height',h+8);outline.setAttribute('rx',4);outline.setAttribute('fill','none');outline.setAttribute('stroke','var(--accent)');outline.setAttribute('stroke-width','1.5');outline.setAttribute('stroke-dasharray','4 3');outline.setAttribute('transform',`rotate(${el.rotation||0} ${p.x} ${p.y})`);layer.appendChild(outline);
@@ -407,11 +438,16 @@ function renderCanvas(){
   if(activeProject().settings.ghostFloors){
     const ghost=document.createElementNS(svgNS,'g');
     ghost.setAttribute('opacity','.18');ghost.setAttribute('pointer-events','none');
-    ghost.setAttribute('data-layer','other-floors');
-    for(const f of state.floors.filter(f=>f.id!==state.activeFloorId))for(const el of f.elements){
+    ghost.setAttribute('data-layer','lower-floors');
+    for(const f of VisualMakerModel.referenceFloors(activeProject()))for(const el of f.elements){
       if(el.type==='wall')drawWall(ghost,el);
       else if(el.type==='room')drawRoom(ghost,{...el,material:'solid'});
       else if(el.type==='object')drawObject(ghost,el);
+      else if(el.type==='door')drawDoor(ghost,el);
+      else if(el.type==='window')drawWindow(ghost,el);
+      else if(el.type==='text')drawText(ghost,el);
+      else if(el.type==='cota')drawCota(ghost,el);
+      else if(el.type==='stair'&&el.endFloorId!==state.activeFloorId)drawStair(ghost,el);
     }
     svgEl.insertBefore(ghost,layerWalls);
   }
@@ -422,9 +458,11 @@ function renderCanvas(){
     else if (el.type==='door') drawDoor(layerOpenings, el);
     else if (el.type==='window') drawWindow(layerOpenings, el);
     else if (el.type==='object') drawObject(layerObjects, el);
+    else if (el.type==='stair') drawStair(layerObjects, el);
     else if (el.type==='cota') drawCota(layerCotas, el);
     else if (el.type==='text') drawText(layerTexts, el);
   }
+  incomingStairs().forEach(el=>drawStair(layerObjects,el,true));
   if (state.blueprintOn) drawBlueprintDimensions(layerCotas);
   drawMirrorAxes(layerSelection);
   drawSmartGuides(layerSelection);
@@ -436,9 +474,10 @@ function renderCanvas(){
   if (tool==='room' && roomDraft) drawRoomPreview(layerSelection);
 }
 function render(){
+  VisualMakerModel.syncStairs(activeProject());
   renderCanvas();
   const emptyHint=document.getElementById('empty-hint');
-  if(emptyHint){const count=(typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements).length;emptyHint.classList.toggle('hidden', count!==0 || document.body.classList.contains('view-3d'));}
+  if(emptyHint){const count=(typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements).length+incomingStairs().length+VisualMakerModel.referenceFloors(activeProject()).reduce((n,f)=>n+f.elements.length,0);emptyHint.classList.toggle('hidden', count!==0 || document.body.classList.contains('view-3d'));}
   updateSummary();
   if (window.refresh3DView) window.refresh3DView();
 }
@@ -521,7 +560,10 @@ function hitTest(sx,sy){
   const activeElements=typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements;
   for (let i=activeElements.length-1;i>=0;i--){
     const el = activeElements[i];
-    if (el.type==='object'){
+    if (el.type==='stair'){
+      const p=toWorld(sx,sy),g=VisualMakerModel.stairGeometry(el,activeProject());
+      if(g.outline.every((a,j)=>{const b=g.outline[(j+1)%4];return (b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x)>=-1e-8;}))return {id:el.id};
+    } else if (el.type==='object'){
       if (hitTestObject(sx,sy,el)) return {id:el.id};
     } else if (el.type==='door' || el.type==='window'){
       if (hitTestDoorWindow(sx,sy,el)) return {id:el.id};

@@ -10,6 +10,9 @@
    precisar tratar cada tipo separadamente. */
 
 function activeFloorId(){ return (state&&state.activeFloorId)||'floor-1'; }
+function incomingStairs(){
+  return state.floors.flatMap(f=>f.elements).filter(e=>e.type==='stair'&&e.endFloorId===activeFloorId()&&e.floorId!==activeFloorId());
+}
 
 // Derived surface shared by 2D display and image exports; never an editable room.
 function floorSurfaceElements(){
@@ -54,6 +57,12 @@ function addObject(x,y,kind,label,category,w,h){
   state.elements.push(el);
   return el;
 }
+function addStair(x,y){
+  const index=state.floors.findIndex(f=>f.id===activeFloorId());
+  const el={id:genId(),projectId:state.activeProjectId,floorId:activeFloorId(),startFloorId:activeFloorId(),
+    endFloorId:state.floors[index+1]?.id||null,type:'stair',x,y,width:1,length:4.2,stepCount:16,rotation:0,stairType:'straight',color:'#C6B49A'};
+  state.elements.push(el);VisualMakerModel.syncStairs(activeProject());return el;
+}
 function createRectFromDims(w,h){
   addWall(0,0,w,0); addWall(w,0,w,h); addWall(w,h,0,h); addWall(0,h,0,0);
 }
@@ -66,8 +75,8 @@ function textBoxMetrics(el){
 
 /* Caixa envolvente (em metros) de todos os elementos — usada para
    centralizar a vista, exportar PNG e posicionar o eixo de espelho. */
-function computeContentBBox(){
-  const elements=typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements;
+function computeContentBBox(includeReferences=false){
+  const elements=[...(typeof getActiveFloorElements==='function'?getActiveFloorElements():state.elements),...incomingStairs(),...(includeReferences?VisualMakerModel.referenceFloors(activeProject()).flatMap(f=>f.elements):[])];
   if (elements.length===0) return {minX:0,minY:0,maxX:5,maxY:5};
   let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
   for (const el of elements){
@@ -77,6 +86,10 @@ function computeContentBBox(){
     } else if (el.type==='room'){
       minX=Math.min(minX,el.x); maxX=Math.max(maxX,el.x+el.w);
       minY=Math.min(minY,el.y); maxY=Math.max(maxY,el.y+el.h);
+    } else if (el.type==='stair'){
+      for(const p of VisualMakerModel.stairGeometry(el,activeProject()).outline){
+        minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);
+      }
     } else if (el.type==='object'){
       const radius=Math.hypot(el.w||1,el.h||1)/2;
       minX=Math.min(minX,el.x-radius); maxX=Math.max(maxX,el.x+radius);
@@ -146,7 +159,7 @@ function rotateElement(id, deltaDeg){
   } else if (el.type==='door' || el.type==='window'){
     if(el.wallId&&typeof syncOpeningsForWall==='function')syncOpeningsForWall(el.wallId);
     else el.angle = ((el.angle||0)+deltaDeg)%360;
-  } else if (el.type==='object'){
+  } else if (el.type==='object'||el.type==='stair'){
     el.rotation = ((el.rotation||0)+deltaDeg)%360;
   } else if (el.type==='text'){
     el.rotation = ((el.rotation||0)+deltaDeg)%360;
@@ -165,6 +178,10 @@ function mirrorElementData(el, axis, axisPos){
     const p1 = reflectCoords(el.x1, el.y1, axis, axisPos);
     const p2 = reflectCoords(el.x2, el.y2, axis, axisPos);
     copy.x1=p1.x; copy.y1=p1.y; copy.x2=p2.x; copy.y2=p2.y;
+  } else if (copy.type==='stair'){
+    const p=reflectCoords(el.x,el.y,axis,axisPos);copy.x=p.x;copy.y=p.y;
+    copy.rotation=axis==='x'?-(el.rotation||0):180-(el.rotation||0);
+    copy.mirrored=!el.mirrored;
   } else if (copy.type==='object'){
     const p = reflectCoords(el.x, el.y, axis, axisPos);
     copy.x=p.x; copy.y=p.y;

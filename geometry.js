@@ -116,7 +116,7 @@ function axisSnapCandidates(excludeId){
         pushX(el.x-(el.w||1)/2,el.y,el.id,'edge');pushX(el.x+(el.w||1)/2,el.y,el.id,'edge');
         pushY(el.y-(el.h||1)/2,el.x,el.id,'edge');pushY(el.y+(el.h||1)/2,el.x,el.id,'edge');
       }
-    }else if(el.type==='door'||el.type==='window'||el.type==='text'){
+    }else if(el.type==='door'||el.type==='window'||el.type==='text'||el.type==='stair'){
       pushX(el.x,el.y,el.id,'center');pushY(el.y,el.x,el.id,'center');
     }
   }

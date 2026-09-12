@@ -253,13 +253,14 @@ body.blueprint-mode .status-mode span{background:#8ED0FF;box-shadow:0 0 0 3px rg
 #canvas-3d.dragging{cursor:grabbing;}
 .viewer3d-help{position:absolute;left:16px;top:16px;z-index:8;display:flex;align-items:center;gap:14px;padding:10px 11px 10px 12px;border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--control) 92%,transparent);box-shadow:0 3px 14px rgba(27,36,48,.10);backdrop-filter:blur(5px);}
 .viewer3d-help>div{display:flex;flex-direction:column;gap:2px;}
+.viewer3d-help{max-width:calc(100% - 32px);flex-wrap:wrap;}
 .viewer3d-help .viewer3d-actions{flex-direction:row;gap:6px;}
 .viewer3d-help strong{font-size:11.5px;color:var(--text);}
 .viewer3d-help span{font-family:var(--font-mono);font-size:9.5px;color:var(--text-secondary);}
 .viewer3d-help button{border:1px solid var(--border);border-radius:5px;background:var(--control);color:var(--text);padding:6px 8px;font-size:10.5px;font-weight:600;cursor:pointer;}
 .viewer3d-help button:hover{border-color:var(--accent);color:var(--accent);}
-body.view-3d .tool-group,body.view-3d .library-tabs,body.view-3d .asset-grid,body.view-3d .mirror-controls,body.view-3d .grid-controls{opacity:.42;pointer-events:none;filter:saturate(.55);}
-body.view-3d .sidebar .mini-label:first-of-type{opacity:.55;}
+.annotations-3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:hidden;}
+.annotations-3d text{paint-order:stroke;stroke:var(--control);stroke-width:3px;stroke-linejoin:round;}
 body.view-3d .zoom-bar #zoom-out,body.view-3d .zoom-bar #zoom-in,body.view-3d .zoom-bar #zoom-fit,body.view-3d .zoom-bar #zoom-label{display:none;}
 body.view-3d .status-help{font-size:0;}
 body.view-3d .status-help::after{content:attr(data-three-d-help);font-size:10px;}
@@ -355,3 +356,18 @@ body.dark-mode .settings-popover{box-shadow:0 14px 40px rgba(0,0,0,.35);}
   .viewer3d-actions,.viewer-floor-controls{flex-wrap:wrap}
   .hierarchy-settings-content{right:auto;left:0;transform:translateX(-75%)}
 }
+#viewer3d-walk-help{display:none}
+.person-settings{display:none;gap:12px;padding-top:6px}
+body.view-person .person-settings{display:flex}
+.person-settings label{font-size:11px;display:flex;align-items:center;gap:5px}
+.person-settings input{width:64px;padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--control);color:var(--text)}
+body.view-person .person-settings span{display:inline}
+.walk-controls{display:none;position:absolute;right:16px;bottom:155px;gap:6px;z-index:8}
+body.view-person .walk-controls{display:flex}
+.walk-controls button{width:42px;height:42px;border:1px solid #8996a5;border-radius:8px;background:#fff;color:#182b40;font-size:22px;touch-action:none}
+body.view-person #viewer3d-help > div:first-child > span{display:none}
+body.view-person #viewer3d-help #viewer3d-walk-help{display:block}
+body.view-person .viewer-floor-controls,body.view-person #viewer3d-hide-front{display:none}
+body.view-person #properties-panel{display:none}
+body.view-person .status-help{display:none}
+#viewer3d-person[aria-pressed="true"]{background:var(--accent,#2563eb);color:#fff}
